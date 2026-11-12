@@ -48,6 +48,9 @@ if [ -f "$DEST/config.toml" ]; then
 else
   install -m 644 "$SRC/config.toml" "$DEST/config.toml"
 fi
+for f in profiles.json camera.json; do
+  [ -f "$SRC/$f" ] && [ ! -f "$DEST/$f" ] && install -m 644 "$SRC/$f" "$DEST/$f"
+done
 chown -R "$RUN_USER" "$DEST"
 
 echo "==> Creating systemd services 'rov' and 'rov-autopair'"

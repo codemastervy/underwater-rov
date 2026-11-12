@@ -6,10 +6,16 @@ through 4 BTS7960 (IBT-2) boards. Everything runs above water; only the motor wi
 ## Files
 | File | What it is |
 |---|---|
-| `rov.py` | the program |
+| `rov.py` | the motor program (controller → motors), runs as the `rov` service |
+| `rov_gui.py` | full-screen dashboard for the 800x480 case monitor (status, motor flip, profile editor, camera) |
 | `config.toml` | pins, motor layout, speeds, safety settings |
+| `profiles.json` | drive profiles (edited on the screen: SETUP > PROFILES) |
+| `camera.json` | camera flip setting |
 | `install.sh` | installs everything on the Pi and starts it on boot |
-| `pair-controller.sh` | pairs a PS5/PS4/other Bluetooth controller |
+| `pair-controller.sh` · `rov-autopair.sh` | pair a PS5/PS4/other Bluetooth controller · auto-pairing service |
+
+The ready-to-flash Pi OS image (login `pi` / `raspberry`, hostname `rov`, SSH on, Ethernet only) is too big for
+GitHub and isn't in this repo.
 
 ## Wiring
 
@@ -17,10 +23,10 @@ Pin numbers: **GPIO** = what goes in `config.toml`, **Pin** = physical pin on th
 
 | BTS7960 board | RPWM | LPWM | R_EN + L_EN | VCC | GND |
 |---|---|---|---|---|---|
-| Motor 1 (left)  | GPIO12 / Pin 32 | GPIO13 / Pin 33 | GPIO17 / Pin 11 | 3.3V Pin 1 or 17 | any GND |
-| Motor 2 (right) | GPIO19 / Pin 35 | GPIO26 / Pin 37 | GPIO17 / Pin 11 | 3.3V | GND |
-| Motor 3 (vert front) | GPIO16 / Pin 36 | GPIO20 / Pin 38 | GPIO17 / Pin 11 | 3.3V | GND |
-| Motor 4 (vert rear)  | GPIO24 / Pin 18 | GPIO25 / Pin 22 | GPIO17 / Pin 11 | 3.3V | GND |
+| Motor 1 (rear up)  | GPIO12 / Pin 32 | GPIO13 / Pin 33 | GPIO17 / Pin 11 | 3.3V Pin 1 or 17 | any GND |
+| Motor 2 (front up) | GPIO19 / Pin 35 | GPIO26 / Pin 37 | GPIO17 / Pin 11 | 3.3V | GND |
+| Motor 3 (right)    | GPIO16 / Pin 36 | GPIO20 / Pin 38 | GPIO17 / Pin 11 | 3.3V | GND |
+| Motor 4 (left)     | GPIO24 / Pin 18 | GPIO25 / Pin 22 | GPIO17 / Pin 11 | 3.3V | GND |
 
 Pi GND pins: 6, 9, 14, 20, 25, 30, 34, 39.
 
@@ -64,19 +70,38 @@ To watch it live on the case's monitor: `sudo systemctl stop rov && python3 /opt
 
 | Button | Action |
 |---|---|
-| **OPTIONS** | **Arm** (sticks must be centred) |
+| **OPTIONS** | **Arm** (sticks, triggers and D-pad must be centred) |
 | **CIRCLE**, **CREATE/SHARE**, or **PS** | **Disarm / stop all motors** |
-| Left stick | forward/back + turn |
-| Right stick up/down | ascend / descend |
-| Right stick left/right | sideways (only if a motor has a `sway` value) |
-| R2 / L2 | ascend / descend (finer, analog) |
+| **TRIANGLE** | next drive profile (while SAFE) |
+| **SQUARE** | camera page on / off |
 | R1 / L1 | speed level up / down (25 / 50 / 75 / 100 %) |
+| Sticks, triggers, D-pad | depend on the drive profile (below) |
 
 It starts at 50 % speed. The motors ramp up smoothly rather than jumping to full power.
 
+### Drive profiles
+| | **Standard** | **Tank** |
+|---|---|---|
+| Left stick | ↕ forward/back, ↔ turn | ↕ left motor |
+| Right stick | ↕ up/down | ↕ right motor |
+| R2 / L2 | up / down | up / down |
+| D-pad ↕ | tilt nose up / down | tilt nose up / down |
+
+Make as many profiles as you like on the case screen with the mouse: **SETUP > PROFILES**. Each control (sticks, triggers,
+D-pad) can be set to forward, turn, up/down, tilt, sideways, left side or right side, with its own invert and power.
+The profile editor can't be opened from the controller.
+
+### Dashboard (case monitor)
+- Main page: armed/SAFE, profile, speed, live motor bars, big **STOP** button.
+- **SETUP > MOTORS**: **FLIP** reverses a motor that pushes the wrong way (only while SAFE, saved automatically).
+- **CAMERA**: live feed from the USB capture card. **FLIP** cycles normal → upside down → mirrored.
+- Keyboard: space = stop, +/- = speed, p = next profile, c = camera.
+- If the edges are cut off on another monitor: `python3 /opt/rov/rov_gui.py --margins 30,20,30,20`.
+
 ### Thruster layout
-The default mix assumes 2 horizontal thrusters (left/right) and 2 vertical ones. If yours differ, change the
-numbers in each `[[motor]]` block. Motor power = `surge×forward + yaw×turn + heave×up + sway×sideways`.
+Motor power = `surge×forward + yaw×turn + heave×up + sway×sideways + pitch×tilt`, using the numbers in each
+`[[motor]]` block of `config.toml`. Default: rear up and front up both lift; tilt pushes them opposite ways;
+right and left do forward and turn.
 
 ## Safety behaviour
 - Starts **disarmed**. The enable line stays low and nothing spins until you press OPTIONS.
