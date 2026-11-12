@@ -68,6 +68,8 @@ To watch it live on the case's monitor: `sudo systemctl stop rov && python3 /opt
 
 ## Controls
 
+**Printable controller card:** [docs/controller-card.pdf](docs/controller-card.pdf) (A4 landscape, one page) to stick on the case.
+
 | Button | Action |
 |---|---|
 | **OPTIONS** | **Arm** (sticks, triggers and D-pad must be centred) |
