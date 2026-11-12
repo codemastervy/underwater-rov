@@ -1,0 +1,86 @@
+# Underwater ROV config. Edit this, then:  sudo systemctl restart rov
+# Pin numbers are BCM GPIO numbers (NOT physical pin numbers). See README.md for the wiring table.
+
+[gpio]
+chip = 0                 # Raspberry Pi 4 = gpiochip 0
+enable_pin = 17          # wired to R_EN + L_EN of ALL four BTS7960 boards (motors are dead when this is LOW)
+pwm_frequency = 1000     # Hz. BTS7960 handles up to 25 kHz; lgpio software PWM is happiest at <= 2000
+status_led_pin = -1      # optional LED (on = armed). -1 = not used
+arm_switch_pin = -1      # optional physical toggle on the panel (switch to GND). -1 = not used.
+                         # When used, motors only run while this switch is ON.
+
+[control]
+drive_profile = "Standard"   # active drive profile. Profiles are edited on the case screen
+                             # (SETUP > PROFILES) and stored in profiles.json. TRIANGLE = next profile.
+deadzone = 0.08          # ignore stick movement smaller than this (0..1)
+expo = 0.35              # 0 = linear, 1 = very soft around center (finer control at low speed)
+ramp_per_second = 3.0    # max change in motor power per second (3.0 = 0 to full in 0.33 s). Protects battery/drivers
+speed_levels = [0.25, 0.5, 0.75, 1.0]
+start_speed_level = 1    # index into speed_levels (1 = 50%)
+min_duty = 0             # % - set e.g. 15 if motors hum but don't spin at very low power
+heartbeat_timeout = 0.5  # seconds. PS4/PS5 pads stream motion data constantly; if it stops, motors stop.
+                         # (Bluetooth can take up to 20 s to report a dead link, this catches it in 0.5 s)
+invert_surge = false
+invert_yaw = false
+invert_heave = false
+invert_sway = false
+invert_pitch = false
+
+[controllers]
+# Name fragments in priority order. The first one found is used; if it disconnects,
+# the next one found takes over (motors stay DISARMED until you press OPTIONS again).
+preferred = ["DualSense", "Wireless Controller", "Xbox", "8BitDo", "Pro Controller"]
+
+# ---- Thrusters ----
+# Each motor's power = surge*s + yaw*y + heave*h + sway*w + pitch*p
+#   surge = forward/back   yaw = turn   heave = up/down   sway = sideways   pitch = tilt (nose up)
+# Run  python3 rov.py --test  to find out which motor is which and which way it spins,
+# then fix names / coefficients / invert here.
+
+[[motor]]
+# Motor 1 board: rear vertical thruster
+name = "rear_up"
+rpwm = 12
+lpwm = 13
+surge = 0.0
+yaw = 0.0
+heave = 1.0
+sway = 0.0
+pitch = -1.0
+invert = false
+
+[[motor]]
+# Motor 2 board: front vertical thruster
+name = "front_up"
+rpwm = 19
+lpwm = 26
+surge = 0.0
+yaw = 0.0
+heave = 1.0
+sway = 0.0
+pitch = 1.0
+invert = false
+
+[[motor]]
+# Motor 3 board: right horizontal thruster
+name = "right"
+rpwm = 16
+lpwm = 20
+surge = 1.0
+yaw = -1.0
+heave = 0.0
+sway = 0.0
+pitch = 0.0
+invert = true
+
+[[motor]]
+# Motor 4 board: left horizontal thruster
+name = "left"
+rpwm = 24
+lpwm = 25
+surge = 1.0
+yaw = 1.0
+heave = 0.0
+sway = 0.0
+pitch = 0.0
+invert = false
