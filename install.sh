@@ -33,6 +33,9 @@ install -m 755 "$SRC/pair-controller.sh" "$DEST/pair-controller.sh"
 install -m 644 "$SRC/README.md" "$DEST/README.md"
 install -m 755 "$SRC/rov_gui.py" "$DEST/rov_gui.py"
 install -m 644 "$SRC/vision.py" "$DEST/vision.py"
+install -m 644 "$SRC/updater.py" "$DEST/updater.py"
+# which GitHub version this is (written by setup.sh; the dashboard's auto-update writes it itself)
+if [ -f "$SRC/VERSION" ]; then install -m 644 "$SRC/VERSION" "$DEST/VERSION"; fi
 # full-screen dashboard on the case monitor when the desktop starts
 USER_HOME=$(getent passwd "$RUN_USER" | cut -d: -f6)
 install -d -o "$RUN_USER" "$USER_HOME/.config" "$USER_HOME/.config/autostart"
@@ -95,6 +98,7 @@ nmcli con mod "Wired connection 1" ipv4.dhcp-timeout 2147483647 ipv4.link-local 
 systemctl daemon-reload
 systemctl enable bluetooth rov.service rov-autopair.service
 
+if [ -n "${ROV_FROM_UPDATE:-}" ]; then exit 0; fi   # auto-update from the dashboard
 cat <<EOF
 
 Installed. 'rov' starts on every boot.

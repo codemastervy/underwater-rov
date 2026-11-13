@@ -13,6 +13,10 @@ curl -fsSL https://raw.githubusercontent.com/codemastervy/underwater-rov/main/se
 - **Already installed:** downloads the latest version and restarts the program and dashboard. Your motor flips,
   drive profiles and camera settings are kept.
 - Nothing needs installing first, not even git.
+- **After that you never need the command again:** the dashboard checks GitHub for a new version when it starts and every
+  30 minutes (whenever the Pi has internet). When there is one, the main page shows **⬆ UPDATE READY**; tap it (or
+  **SETUP › EXTRAS › UPDATE NOW**) while SAFE. It downloads, installs and restarts by itself in under a minute.
+  Settings are kept. No internet (at the pool)? It just says so and tries again later.
 
 ## Screenshots
 The dashboard (800x480), captured running on a computer with simulated ROV data; the camera picture is a placeholder:
@@ -20,7 +24,7 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | Main (armed, driving) | Camera + picture adjustments |
 |---|---|
 | ![Main page](docs/screenshots/main.png) | ![Camera page](docs/screenshots/camera.png) |
-| **SETUP › EXTRAS** (keyboard drive, arm sound) | Keyboard driving |
+| **SETUP › EXTRAS** (keyboard drive, arm tune, software update) | Keyboard driving |
 | ![Extras page](docs/screenshots/extras.png) | ![Keyboard driving](docs/screenshots/keyboard.png) |
 | **SETUP › MOTORS** (flip motors) | **SETUP › PROFILES** (profile editor) |
 | ![Motors page](docs/screenshots/motors.png) | ![Profiles page](docs/screenshots/profiles.png) |
@@ -30,6 +34,8 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | ![Autopilot OK](docs/screenshots/status-good.png) | ![Take control warning](docs/screenshots/alert.png) |
 | Line following (camera view) | PICK: click an object to follow its colour |
 | ![Line following](docs/screenshots/camera-line.png) | ![Pick a colour](docs/screenshots/camera-pick.png) |
+| SET TUNE: paste a ringtone | |
+| ![Set tune](docs/screenshots/extras-tune.png) | |
 
 ## Files
 | File | What it is |
@@ -40,6 +46,7 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | `profiles.json` | drive profiles (edited on the screen: SETUP > PROFILES) |
 | `camera.json` | camera flip setting |
 | `setup.sh` | one-command install / update from GitHub (see above) |
+| `updater.py` | automatic updates from GitHub (used by the dashboard) |
 | `install.sh` | installs everything on the Pi and starts it on boot |
 | `pair-controller.sh` · `rov-autopair.sh` | pair a PS5/PS4/other Bluetooth controller · auto-pairing service |
 
@@ -169,14 +176,23 @@ STOP / CIRCLE / disarm always ends it.
 There are no depth or direction sensors, so it can't hold depth and can drift. Always supervise it.
 
 ### Arm sound
-There is no speaker. When the ROV arms, **the motors play a short three-note tune**: they get a very small
-PWM signal at audio frequencies so the motor windings whistle, like a 3D printer playing tunes on its motors. The
-direction swaps each note so the props don't creep. **SETUP › EXTRAS** has on/off, volume (1–15) and **TEST** (plays it while SAFE).
+There is no speaker. When the ROV arms, **the motors play a tune**: they get a very small PWM signal at audio
+frequencies so the motor windings whistle, like a 3D printer playing tunes on its motors. The direction swaps each
+note so the props don't creep.
+
+- **Default tune: the first 15 seconds of "Can't Stop" (Red Hot Chili Peppers) in beeps**: the muted 16th-note guitar
+  intro at 89 BPM, worked out from the recording (pitch + rhythm detection), with the D / E / B notes it plays.
+- **Touch any control (stick, trigger, D-pad, WASD) and the tune stops at once** so you can drive straight away.
+  STOP / CIRCLE stops it too.
+- **SET TUNE**: paste any ringtone in **RTTTL** format (the old Nokia ringtone text, e.g.
+  `Name:d=4,o=5,b=120:c,e,g,2c6`; free RTTTL versions of most songs are online), then **SAVE**. Up to 15 s is played.
+  **DEFAULT TUNE** goes back to Can't Stop. Your tune is kept in `tune.txt` (survives updates).
+- **SETUP › EXTRAS** also has on/off, volume (1–15) and **TEST** (plays it while SAFE; tap again to stop).
 
 ### Dashboard (case monitor)
 - Main page: armed/SAFE, profile, speed, live motor bars, big **STOP** button.
 - **SETUP › MOTORS**: **FLIP** reverses a motor that pushes the wrong way (only while SAFE, saved automatically).
-- **SETUP › EXTRAS**: keyboard drive, arm sound.
+- **SETUP › EXTRAS**: keyboard drive, arm sound and tune, **software update** (version, CHECK NOW / UPDATE NOW).
 - **CAMERA**: live feed from the USB capture card. **FLIP** cycles normal → upside down → mirrored.
   **PICTURE** opens the picture controls: **gain (ISO)**, brightness, contrast, **colour** (saturation) and **warmth**
   (adds red / removes blue, which helps underwater). Saved in `camera.json`; RESET goes back to normal.

@@ -4,3 +4,5 @@ __pycache__/
 .DS_Store
 autopilot.json
 mission.json
+tune.txt
+VERSION

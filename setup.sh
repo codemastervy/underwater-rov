@@ -6,7 +6,8 @@
 #
 # - Downloads the latest version from GitHub into ~/underwater-rov (no git needed).
 # - Installs everything it needs (Python libraries, Bluetooth, ffmpeg) and the 'rov' service + dashboard.
-# - Updating keeps your settings: motor flips (config.toml), drive profiles and camera settings.
+# - Updating keeps your settings: motor flips (config.toml), drive profiles, camera, autopilot, arm tune.
+# - After this, the dashboard updates itself: SETUP > EXTRAS > UPDATE NOW when it says UPDATE READY.
 # - New Pi only: sets the screen to 800x480 for the case monitor (skip with ROV_SCREEN=none).
 set -euo pipefail
 
@@ -26,8 +27,11 @@ echo "==> ROV setup: $MODE"
 echo "==> Downloading the latest version from GitHub"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-curl -fsSL "https://github.com/$REPO/archive/refs/heads/$BRANCH.tar.gz" | tar -xz -C "$TMP"
+SHA="$(curl -fsSL -H "Accept: application/vnd.github.sha" "https://api.github.com/repos/$REPO/commits/$BRANCH" || true)"
+if [ ${#SHA} -ne 40 ]; then SHA="$BRANCH"; fi
+curl -fsSL "https://codeload.github.com/$REPO/tar.gz/$SHA" | tar -xz -C "$TMP"
 SRC="$(find "$TMP" -mindepth 1 -maxdepth 1 -type d | head -1)"
+if [ "$SHA" != "$BRANCH" ]; then echo "$SHA" > "$SRC/VERSION"; fi   # lets the dashboard spot newer versions
 mkdir -p "$DIR"
 cp -a "$SRC/." "$DIR/"
 chmod +x "$DIR"/*.sh
