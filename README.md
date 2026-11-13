@@ -3,6 +3,17 @@
 The Pi in the case reads a Bluetooth (or USB) game controller and drives the 4 thrusters
 through 4 BTS7960 (IBT-2) boards. Everything runs above water; only the motor wires go down the tether.
 
+## Install or update: one command
+On the Pi (fresh Raspberry Pi OS or an existing ROV Pi), connected to the internet by **Wi-Fi** or Ethernet. Open a terminal and run:
+```bash
+curl -fsSL https://raw.githubusercontent.com/codemastervy/underwater-rov/main/setup.sh | bash
+```
+- **New Pi:** installs everything (Python libraries, Bluetooth, ffmpeg), the `rov` service, the dashboard autostart and
+  the 800x480 screen setting. Then `sudo reboot`. To leave the screen setting alone, use `... | ROV_SCREEN=none bash`.
+- **Already installed:** downloads the latest version and restarts the program and dashboard. Your motor flips,
+  drive profiles and camera settings are kept.
+- Nothing needs installing first, not even git.
+
 ## Screenshots
 Dashboard on the 800x480 case monitor:
 
@@ -22,6 +33,7 @@ Dashboard on the 800x480 case monitor:
 | `config.toml` | pins, motor layout, speeds, safety settings |
 | `profiles.json` | drive profiles (edited on the screen: SETUP > PROFILES) |
 | `camera.json` | camera flip setting |
+| `setup.sh` | one-command install / update from GitHub (see above) |
 | `install.sh` | installs everything on the Pi and starts it on boot |
 | `pair-controller.sh` · `rov-autopair.sh` | pair a PS5/PS4/other Bluetooth controller · auto-pairing service |
 
@@ -74,15 +86,6 @@ Pi GND pins: 6, 9, 14, 20, 25, 30, 34, 39.
    Each motor spins forward then reverse at 30 %. Then edit `/opt/rov/config.toml`:
    wrong direction → `invert = true`; wrong motor → swap the `rpwm`/`lpwm` pins between entries.
 5. `sudo systemctl start rov`. From now on it starts by itself on every boot.
-
-### Updating the Pi from GitHub
-With the Pi on the internet (or copy the repo over on a USB stick):
-```bash
-cd ~/underwater-rov && git pull        # first time: git clone https://github.com/codemastervy/underwater-rov
-sudo bash install.sh                   # keeps your config.toml, profiles and camera settings
-sudo reboot
-```
-New settings are added with their defaults if your `config.toml` doesn't have them yet.
 
 To watch it live on the case's monitor: `sudo systemctl stop rov && python3 /opt/rov/rov.py`.
 

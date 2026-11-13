@@ -11,7 +11,7 @@ DEST=/opt/rov
 
 echo "==> Checking packages"
 NEED=()
-for p in python3-evdev python3-lgpio bluez; do
+for p in python3-evdev python3-lgpio python3-tk bluez ffmpeg curl; do
   dpkg -s "$p" >/dev/null 2>&1 || NEED+=("$p")
 done
 if [ ${#NEED[@]} -gt 0 ]; then
@@ -49,7 +49,7 @@ else
   install -m 644 "$SRC/config.toml" "$DEST/config.toml"
 fi
 for f in profiles.json camera.json; do
-  [ -f "$SRC/$f" ] && [ ! -f "$DEST/$f" ] && install -m 644 "$SRC/$f" "$DEST/$f"
+  if [ -f "$SRC/$f" ] && [ ! -f "$DEST/$f" ]; then install -m 644 "$SRC/$f" "$DEST/$f"; fi
 done
 chown -R "$RUN_USER" "$DEST"
 
