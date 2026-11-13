@@ -15,7 +15,7 @@ curl -fsSL https://raw.githubusercontent.com/codemastervy/underwater-rov/main/se
 - Nothing needs installing first, not even git.
 
 ## Screenshots
-Dashboard on the 800x480 case monitor:
+The dashboard (800x480), captured running on a computer with simulated ROV data; the camera picture is a placeholder:
 
 | Main (armed, driving) | Camera + picture adjustments |
 |---|---|
