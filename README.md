@@ -180,13 +180,13 @@ There is no speaker. When the ROV arms, **the motors play a tune**: they get a v
 frequencies so the motor windings whistle, like a 3D printer playing tunes on its motors. The direction swaps each
 note so the props don't creep.
 
-- **Default tune: the first 15 seconds of "Can't Stop" (Red Hot Chili Peppers) in beeps**: the muted 16th-note guitar
-  intro at 89 BPM, worked out from the recording (pitch + rhythm detection), with the D / E / B notes it plays.
+- **Default: an FPV-drone style arming sound (5 s)**: 3 rising ESC power-up tones, a low-HIGH "signal OK" pair, then a
+  long ARMED beep.
 - **Touch any control (stick, trigger, D-pad, WASD) and the tune stops at once** so you can drive straight away.
   STOP / CIRCLE stops it too.
 - **SET TUNE**: paste any ringtone in **RTTTL** format (the old Nokia ringtone text, e.g.
-  `Name:d=4,o=5,b=120:c,e,g,2c6`; free RTTTL versions of most songs are online), then **SAVE**. Up to 15 s is played.
-  **DEFAULT TUNE** goes back to Can't Stop. Your tune is kept in `tune.txt` (survives updates).
+  `Name:d=4,o=5,b=120:c,e,g,2c6`; free RTTTL versions of most songs are online), then **SAVE**. Up to 5 s is played.
+  **DEFAULT TUNE** goes back to the FPV sound. Your tune is kept in `tune.txt` (survives updates).
 - **SETUP › EXTRAS** also has on/off, volume (1–15) and **TEST** (plays it while SAFE; tap again to stop).
 
 ### Dashboard (case monitor)
