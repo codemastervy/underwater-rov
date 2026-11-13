@@ -11,7 +11,7 @@ DEST=/opt/rov
 
 echo "==> Checking packages"
 NEED=()
-for p in python3-evdev python3-lgpio python3-tk bluez ffmpeg curl; do
+for p in python3-evdev python3-lgpio python3-tk python3-numpy bluez ffmpeg curl; do
   dpkg -s "$p" >/dev/null 2>&1 || NEED+=("$p")
 done
 if [ ${#NEED[@]} -gt 0 ]; then
@@ -32,6 +32,7 @@ install -m 755 "$SRC/rov-autopair.sh" "$DEST/rov-autopair.sh"
 install -m 755 "$SRC/pair-controller.sh" "$DEST/pair-controller.sh"
 install -m 644 "$SRC/README.md" "$DEST/README.md"
 install -m 755 "$SRC/rov_gui.py" "$DEST/rov_gui.py"
+install -m 644 "$SRC/vision.py" "$DEST/vision.py"
 # full-screen dashboard on the case monitor when the desktop starts
 USER_HOME=$(getent passwd "$RUN_USER" | cut -d: -f6)
 install -d -o "$RUN_USER" "$USER_HOME/.config" "$USER_HOME/.config/autostart"

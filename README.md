@@ -24,6 +24,10 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | ![Extras page](docs/screenshots/extras.png) | ![Keyboard driving](docs/screenshots/keyboard.png) |
 | **SETUP › MOTORS** (flip motors) | **SETUP › PROFILES** (profile editor) |
 | ![Motors page](docs/screenshots/motors.png) | ![Profiles page](docs/screenshots/profiles.png) |
+| **SETUP › AUTOPILOT** | Mission editor |
+| ![Autopilot page](docs/screenshots/autopilot.png) | ![Mission page](docs/screenshots/mission.png) |
+| Line following (camera view) | Autopilot unsure: take control |
+| ![Line following](docs/screenshots/camera-line.png) | ![Take control warning](docs/screenshots/alert.png) |
 
 ## Files
 | File | What it is |
@@ -131,6 +135,27 @@ Plug a keyboard into the Pi and switch **KEYBOARD DRIVE** on in **SETUP › EXTR
 
 The dashboard sends the held keys about 20 times a second. If that stops for 0.5 s (dashboard closed or frozen), the keys
 count as released, and if no controller is connected the motors disarm.
+
+### Autopilot
+**SETUP › AUTOPILOT**, mouse only. The controller can't switch it on, and it is **OFF at every start-up**.
+Switch it ON, arm the ROV, then click a mode (click it again or **AUTO OFF** to stop):
+
+| Mode | What it does | Pilot |
+|---|---|---|
+| **CRUISE** | Keeps the thrust you had when you clicked it | moving a stick overrides that direction |
+| **LINE** | Follows a line seen by the camera (pool lane line, tape). Needs the camera to see the bottom | up/down still yours; any other stick movement takes over |
+| **TARGET** | Steers to a coloured object and stops at TARGET DISTANCE | any stick movement takes over |
+| **HEADING** | Holds the direction using how the camera picture moves (needs a floor/rocks with detail in view) | you drive; turning sets a new heading |
+| **MISSION** | Runs timed steps (EDIT MISSION: up to 8 steps of forward/back/up/down/turn/tilt/hover) | any stick movement takes over |
+
+Settings: **HOVER TRIM** / **NOSE TRIM** (constant thrust so it hovers level; active whenever the autopilot is ON),
+AUTO POWER (most it may use), AUTO SPEED, LINE / TARGET COLOUR, TARGET DISTANCE, STEERING.
+CAMERA VIEW shows what it's tracking.
+
+**Safety:** STOP / CIRCLE / disarm always ends it. If it loses the line or target, or the camera picture stops, it
+hovers and a flashing red **"AUTOPILOT UNSURE – TAKE CONTROL NOW"** banner appears on the main and camera pages.
+After 3 s it switches itself off: **"AUTOPILOT OFF – YOU HAVE CONTROL"**.
+There are no depth or direction sensors, so it can't hold depth and can drift. Always supervise it.
 
 ### Arm sound
 There is no speaker. When the ROV arms, **the motors play a short three-note tune**: they get a very small
