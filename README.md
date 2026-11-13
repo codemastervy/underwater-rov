@@ -3,6 +3,17 @@
 The Pi in the case reads a Bluetooth (or USB) game controller and drives the 4 thrusters
 through 4 BTS7960 (IBT-2) boards. Everything runs above water; only the motor wires go down the tether.
 
+## Screenshots
+Dashboard on the 800x480 case monitor:
+
+| Main (armed, driving) | Camera + picture adjustments |
+|---|---|
+| ![Main page](docs/screenshots/main.png) | ![Camera page](docs/screenshots/camera.png) |
+| **SETUP › EXTRAS** (keyboard drive, arm sound) | Keyboard driving |
+| ![Extras page](docs/screenshots/extras.png) | ![Keyboard driving](docs/screenshots/keyboard.png) |
+| **SETUP › MOTORS** (flip motors) | **SETUP › PROFILES** (profile editor) |
+| ![Motors page](docs/screenshots/motors.png) | ![Profiles page](docs/screenshots/profiles.png) |
+
 ## Files
 | File | What it is |
 |---|---|
@@ -64,6 +75,15 @@ Pi GND pins: 6, 9, 14, 20, 25, 30, 34, 39.
    wrong direction → `invert = true`; wrong motor → swap the `rpwm`/`lpwm` pins between entries.
 5. `sudo systemctl start rov`. From now on it starts by itself on every boot.
 
+### Updating the Pi from GitHub
+With the Pi on the internet (or copy the repo over on a USB stick):
+```bash
+cd ~/underwater-rov && git pull        # first time: git clone https://github.com/codemastervy/underwater-rov
+sudo bash install.sh                   # keeps your config.toml, profiles and camera settings
+sudo reboot
+```
+New settings are added with their defaults if your `config.toml` doesn't have them yet.
+
 To watch it live on the case's monitor: `sudo systemctl stop rov && python3 /opt/rov/rov.py`.
 
 ## Controls
@@ -93,11 +113,35 @@ Make as many profiles as you like on the case screen with the mouse: **SETUP > P
 D-pad) can be set to forward, turn, up/down, tilt, sideways, left side or right side, with its own invert and power.
 The profile editor can't be opened from the controller.
 
+### Keyboard drive
+Plug a keyboard into the Pi and switch **KEYBOARD DRIVE** on in **SETUP › EXTRAS**. It works with or without the controller.
+
+| Key | Action |
+|---|---|
+| **Enter** | **ARM** (no keys held) |
+| **Esc** | **STOP** |
+| W / S | forward / back |
+| A / D | turn left / right |
+| Space / Shift | up / down |
+| R / F | tilt nose up / down |
+| + / − | speed up / down |
+
+The dashboard sends the held keys about 20 times a second. If that stops for 0.5 s (dashboard closed or frozen), the keys
+count as released, and if no controller is connected the motors disarm.
+
+### Arm sound
+There is no speaker. When the ROV arms, **the motors play a short three-note tune**: they get a very small
+PWM signal at audio frequencies so the motor windings whistle, like a 3D printer playing tunes on its motors. The
+direction swaps each note so the props don't creep. **SETUP › EXTRAS** has on/off, volume (1–15) and **TEST** (plays it while SAFE).
+
 ### Dashboard (case monitor)
 - Main page: armed/SAFE, profile, speed, live motor bars, big **STOP** button.
-- **SETUP > MOTORS**: **FLIP** reverses a motor that pushes the wrong way (only while SAFE, saved automatically).
+- **SETUP › MOTORS**: **FLIP** reverses a motor that pushes the wrong way (only while SAFE, saved automatically).
+- **SETUP › EXTRAS**: keyboard drive, arm sound.
 - **CAMERA**: live feed from the USB capture card. **FLIP** cycles normal → upside down → mirrored.
-- Keyboard: space = stop, +/- = speed, p = next profile, c = camera.
+  **PICTURE** opens the picture controls: **gain (ISO)**, brightness, contrast, **colour** (saturation) and **warmth**
+  (adds red / removes blue, which helps underwater). Saved in `camera.json`; RESET goes back to normal.
+- Keyboard: Esc = stop (also Space when keyboard drive is off), +/- = speed, p = next profile, c = camera, F11 = full screen.
 - If the edges are cut off on another monitor: `python3 /opt/rov/rov_gui.py --margins 30,20,30,20`.
 
 ### Thruster layout
