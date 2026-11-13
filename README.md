@@ -26,8 +26,10 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | ![Motors page](docs/screenshots/motors.png) | ![Profiles page](docs/screenshots/profiles.png) |
 | **SETUP › AUTOPILOT** | Mission editor |
 | ![Autopilot page](docs/screenshots/autopilot.png) | ![Mission page](docs/screenshots/mission.png) |
-| Line following (camera view) | Autopilot unsure: take control |
-| ![Line following](docs/screenshots/camera-line.png) | ![Take control warning](docs/screenshots/alert.png) |
+| Autopilot working (green) | Autopilot unsure: take control (flashing red) |
+| ![Autopilot OK](docs/screenshots/status-good.png) | ![Take control warning](docs/screenshots/alert.png) |
+| Line following (camera view) | PICK: click an object to follow its colour |
+| ![Line following](docs/screenshots/camera-line.png) | ![Pick a colour](docs/screenshots/camera-pick.png) |
 
 ## Files
 | File | What it is |
@@ -140,21 +142,30 @@ count as released, and if no controller is connected the motors disarm.
 **SETUP › AUTOPILOT**, mouse only. The controller can't switch it on, and it is **OFF at every start-up**.
 Switch it ON, arm the ROV, then click a mode (click it again or **AUTO OFF** to stop):
 
-| Mode | What it does | Pilot |
-|---|---|---|
-| **CRUISE** | Keeps the thrust you had when you clicked it | moving a stick overrides that direction |
-| **LINE** | Follows a line seen by the camera (pool lane line, tape). Needs the camera to see the bottom | up/down still yours; any other stick movement takes over |
-| **TARGET** | Steers to a coloured object and stops at TARGET DISTANCE | any stick movement takes over |
-| **HEADING** | Holds the direction using how the camera picture moves (needs a floor/rocks with detail in view) | you drive; turning sets a new heading |
-| **MISSION** | Runs timed steps (EDIT MISSION: up to 8 steps of forward/back/up/down/turn/tilt/hover) | any stick movement takes over |
+| Mode | What it does |
+|---|---|
+| **CRUISE** | Keeps the thrust you're using when you click it (hold the stick/key, click, let go) |
+| **LINE** | Follows a line seen by the camera (pool lane line, tape). Needs the camera to see the bottom |
+| **TARGET** | Steers to a coloured object and stops at TARGET DISTANCE |
+| **HEADING** | Holds still, facing the same way, using how the camera picture moves (needs a floor/rocks with detail in view) |
+| **MISSION** | Runs timed steps (EDIT MISSION: up to 8 steps of forward/back/up/down/turn/tilt/hover) |
+
+**Taking over:** any stick, trigger, D-pad or keyboard-drive key switches the autopilot mode off immediately.
+(CRUISE: the input you were holding when you clicked sets the speed; after you let go, the next movement takes over.)
+
+**Target colour:** pick one from the list, or on the camera page press **PICK** and click the object in the video.
+Its exact colour (as the camera sees it underwater) becomes the target, shown as "■ PICKED".
 
 Settings: **HOVER TRIM** / **NOSE TRIM** (constant thrust so it hovers level; active whenever the autopilot is ON),
 AUTO POWER (most it may use), AUTO SPEED, LINE / TARGET COLOUR, TARGET DISTANCE, STEERING.
 CAMERA VIEW shows what it's tracking.
 
-**Safety:** STOP / CIRCLE / disarm always ends it. If it loses the line or target, or the camera picture stops, it
-hovers and a flashing red **"AUTOPILOT UNSURE – TAKE CONTROL NOW"** banner appears on the main and camera pages.
-After 3 s it switches itself off: **"AUTOPILOT OFF – YOU HAVE CONTROL"**.
+**Status bar** (main and camera pages, only while the autopilot is switched ON):
+- **Green ✓**: a mode is engaged and working.
+- **Flashing red ⚠ TAKE CONTROL NOW**: it lost the line/target or the camera picture. It hovers, and after 3 s
+  switches itself off ("AUTOPILOT OFF – YOU HAVE CONTROL"). Touching any control clears the warning at once.
+
+STOP / CIRCLE / disarm always ends it.
 There are no depth or direction sensors, so it can't hold depth and can drift. Always supervise it.
 
 ### Arm sound
