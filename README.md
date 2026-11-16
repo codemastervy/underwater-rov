@@ -21,12 +21,12 @@ curl -fsSL https://raw.githubusercontent.com/codemastervy/underwater-rov/main/se
 ## Screenshots
 The dashboard (800x480), captured running on a computer with simulated ROV data; the camera picture is a placeholder:
 
-| Main (armed, driving) | Camera + picture adjustments |
+| Main (armed, driving) | Camera + PICTURE (ISO, RGB) |
 |---|---|
 | ![Main page](docs/screenshots/main.png) | ![Camera page](docs/screenshots/camera.png) |
 | **SETUP › EXTRAS** (keyboard drive, arm tune, software update) | Keyboard driving |
 | ![Extras page](docs/screenshots/extras.png) | ![Keyboard driving](docs/screenshots/keyboard.png) |
-| **SETUP › MOTORS** (flip motors) | **SETUP › PROFILES** (profile editor) |
+| **SETUP › MOTORS** (flip motors, Pi SHUT DOWN / RESTART) | **SETUP › PROFILES** (profile editor) |
 | ![Motors page](docs/screenshots/motors.png) | ![Profiles page](docs/screenshots/profiles.png) |
 | **SETUP › AUTOPILOT** | Mission editor |
 | ![Autopilot page](docs/screenshots/autopilot.png) | ![Mission page](docs/screenshots/mission.png) |
@@ -34,8 +34,8 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | ![Autopilot OK](docs/screenshots/status-good.png) | ![Take control warning](docs/screenshots/alert.png) |
 | Line following (camera view) | PICK: click an object to follow its colour |
 | ![Line following](docs/screenshots/camera-line.png) | ![Pick a colour](docs/screenshots/camera-pick.png) |
-| SET TUNE: paste a ringtone | |
-| ![Set tune](docs/screenshots/extras-tune.png) | |
+| SET TUNE: paste a ringtone | Camera full screen |
+| ![Set tune](docs/screenshots/extras-tune.png) | ![Camera full screen](docs/screenshots/camera-full.png) |
 
 ## Files
 | File | What it is |
@@ -192,10 +192,16 @@ note so the props don't creep.
 ### Dashboard (case monitor)
 - Main page: armed/SAFE, profile, speed, live motor bars, big **STOP** button.
 - **SETUP › MOTORS**: **FLIP** reverses a motor that pushes the wrong way (only while SAFE, saved automatically).
+  **⏻ SHUT DOWN** powers the Pi off safely and **↻ RESTART** reboots it: only while SAFE, and you tap twice (the
+  button turns red: TAP AGAIN). Motors are switched off first. After SHUT DOWN, wait ~20 s, then unplug; to turn
+  it back on, unplug and plug the power back in (a Pi can't switch itself on).
 - **SETUP › EXTRAS**: keyboard drive, arm sound and tune, **software update** (version, CHECK NOW / UPDATE NOW).
 - **CAMERA**: live feed from the USB capture card. **FLIP** cycles normal → upside down → mirrored.
-  **PICTURE** opens the picture controls: **gain (ISO)**, brightness, contrast, **colour** (saturation) and **warmth**
-  (adds red / removes blue, which helps underwater). Saved in `camera.json`; RESET goes back to normal.
+  **PICTURE** opens the picture controls: **ISO** (100 = normal, up to 400 for dark water; it brightens the picture
+  digitally because the capture card has no real ISO), brightness, contrast, **colour** (saturation) and **RED / GREEN /
+  BLUE** each on their own (water makes things blue-green: try more RED, less BLUE). Saved in `camera.json`; RESET goes
+  back to normal. **⛶ FULL SCREEN** makes the video fill the screen; STOP and ARMED/SAFE stay in the side bars,
+  **EXIT** goes back.
 - Keyboard: Esc = stop (also Space when keyboard drive is off), +/- = speed, p = next profile, c = camera, F11 = full screen.
 - If the edges are cut off on another monitor: `python3 /opt/rov/rov_gui.py --margins 30,20,30,20`.
 

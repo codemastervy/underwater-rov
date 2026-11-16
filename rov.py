@@ -44,6 +44,7 @@ import logging
 import os
 import select
 import signal
+import subprocess
 import sys
 import time
 import tomllib
@@ -1228,6 +1229,8 @@ class ROV:
             self.end_tune()
         elif cmd.startswith("tune:"):
             self.set_tune(cmd[5:])
+        elif cmd in ("power:off", "power:reboot"):
+            self.power(cmd[6:])
         elif cmd.startswith("ap_enable:"):
             self.ap.set_enabled(cmd.endswith(":1"))
         elif cmd == "ap_off":
@@ -1237,6 +1240,23 @@ class ROV:
         elif cmd.startswith("ap_set:"):
             _, key, value = cmd.split(":", 2)
             self.ap.set(key, value)
+
+    def power(self, what):
+        """SHUT DOWN / RESTART the Pi from the screen (SETUP > MOTORS). Only while SAFE; motors off first."""
+        if self.armed:
+            self.say("Press STOP first: the Pi only shuts down / restarts while SAFE")
+            return
+        self.disarm("power " + what)
+        self.say("Shutting down… wait 20 s before unplugging" if what == "off" else "Restarting the Pi…")
+        self.write_status_file()
+        action = "poweroff" if what == "off" else "reboot"
+        for cmd in (["sudo", "-n", "systemctl", action], ["systemctl", action]):
+            try:
+                if subprocess.run(cmd, capture_output=True, timeout=30).returncode == 0:
+                    return
+            except (OSError, subprocess.SubprocessError):
+                pass
+        self.say("Can't " + ("shut down" if what == "off" else "restart") + ": no permission (sudo)")
 
     def flip_motor(self, idx):
         """Reverse one motor's direction (only while SAFE) and save it to config.toml."""
