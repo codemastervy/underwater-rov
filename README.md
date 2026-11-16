@@ -34,8 +34,8 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | ![Autopilot OK](docs/screenshots/status-good.png) | ![Take control warning](docs/screenshots/alert.png) |
 | Line following (camera view) | PICK: click an object to follow its colour |
 | ![Line following](docs/screenshots/camera-line.png) | ![Pick a colour](docs/screenshots/camera-pick.png) |
-| **EDIT KEYS** (keyboard drive profile) | |
-| ![Keyboard keys page](docs/screenshots/keys.png) | |
+| Keyboard profile (PROFILES page) | |
+| ![Keyboard profile](docs/screenshots/profiles-keys.png) | |
 | SET TUNE: paste a ringtone | Camera full screen |
 | ![Set tune](docs/screenshots/extras-tune.png) | ![Camera full screen](docs/screenshots/camera-full.png) |
 
@@ -144,9 +144,13 @@ Plug a keyboard into the Pi and switch **KEYBOARD DRIVE** on in **SETUP › EXTR
 | R / F | tilt nose up / down |
 | E / Q (or + / −) | speed up / down |
 
-**Change the keys:** SETUP › EXTRAS › **EDIT KEYS**. Tap an action, press the key you want (only while SAFE). A key
-that's already used swaps with the other action. **WASD** and **ARROWS** (arrow keys, Space/Ctrl up/down, PgUp/PgDn
-tilt) are ready-made presets. Saved in `keymap.json` (kept by updates). Enter = ARM and Esc = STOP can't be changed.
+**Keyboard profiles:** which key does what comes from a **keyboard profile** on **SETUP › PROFILES** (EXTRAS › EDIT
+KEYS jumps there). Each profile is either a **controller** profile (PAD) or a **keyboard** profile (KEYS): make one with
+**+ CONTROLLER** or **+ KEYBOARD**, or COPY one. In a keyboard profile, tap an action's box and press the key you want;
+a key that's already used swaps. **SAVE + USE** makes it the one in use. Built in: **Keys WASD** and **Keys arrows**
+(arrow keys, Space/Ctrl up/down, PgUp/PgDn tilt, = / − speed). One controller profile and one keyboard profile are in
+use at a time (● in the list): **TRIANGLE** = next controller profile, **P** = next keyboard profile (while SAFE).
+Enter = ARM and Esc = STOP can't be changed.
 
 The dashboard sends the held keys about 20 times a second. If that stops for 0.5 s (dashboard closed or frozen), the keys
 count as released, and if no controller is connected the motors disarm.
