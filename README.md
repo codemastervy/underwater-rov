@@ -46,6 +46,7 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | `rov_gui.py` | full-screen dashboard for the 800x480 case monitor (status, motor flip, profile editor, camera) |
 | `config.toml` | pins, motor layout, speeds, safety settings |
 | `profiles.json` | drive profiles (edited on the screen: SETUP > PROFILES) |
+| `designs.json` | your changes to the frame-design trims (made on the screen: SETUP > DESIGN; not in the repo) |
 | `camera.json` | camera flip setting |
 | `setup.sh` | one-command install / update from GitHub (see above) |
 | `updater.py` | automatic updates from GitHub (used by the dashboard) |
@@ -206,6 +207,9 @@ note so the props don't creep.
   button turns red: TAP AGAIN). Motors are switched off first. After SHUT DOWN, wait ~20 s, then unplug; to turn
   it back on, unplug and plug the power back in (a Pi can't switch itself on).
 - **SETUP › EXTRAS**: keyboard drive, arm sound and tune, **software update** (version, CHECK NOW / UPDATE NOW).
+- **SETUP › DESIGN**: pick the frame you built: **v13** (current robot, no trim: the default), **v14**, **v15**,
+  **v16** or **v17** (the hull designs in [aquabots-rov-hull](https://github.com/codemastervy/aquabots-rov-hull), one
+  branch each). Each design trims the motors for its shape; see [Frame designs](#frame-designs). Only while SAFE.
 - **CAMERA**: live feed from the USB capture card. **FLIP** cycles normal → upside down → mirrored.
   **PICTURE** opens the picture controls: **ISO** (100 = normal, up to 400 for dark water; it brightens the picture
   digitally because the capture card has no real ISO), brightness, contrast, **colour** (saturation) and **RED / GREEN /
@@ -214,6 +218,27 @@ note so the props don't creep.
   **EXIT** goes back.
 - Keyboard: Esc = stop (also Space when keyboard drive is off), +/- = speed, p = next profile, c = camera, F11 = full screen.
 - If the edges are cut off on another monitor: `python3 /opt/rov/rov_gui.py --margins 30,20,30,20`.
+
+### Frame designs
+Each hull design balances differently, so **SETUP › DESIGN** applies its own trim on top of the `[[motor]]` numbers
+(they stay as wired). The choice is saved as `design = "..."` in `config.toml`:
+
+| Design | Tilt power | Front up motor | Rear up motor | Level when driving | Why |
+|---|---|---|---|---|---|
+| v13 current robot | 1.00 | 1.00 | 1.00 | 0.00 | unchanged |
+| v14 flooded hull | 0.40 | 1.00 | 1.00 | 0.00 | a full tilt stick can't loop it |
+| v15 open frame | 0.40 | 1.00 | 1.00 | 0.00 | a full tilt stick can't loop it |
+| v16 classic | 0.40 | 0.65 | 1.00 | 0.20 | heavier at the back (side motors trail), so it climbs level |
+| v17 v13 shape | 0.25 | 1.00 | 0.92 | 0.27 | floats sit lower: softer tilt; level climbing and driving |
+
+- **Tilt power** scales how hard the tilt control pushes the front/rear up motors.
+- **Front/Rear up motor** is each motor's share of up/down.
+- **Level when driving** adds tilt in proportion to forward/back. The front and rear motors are told apart by the sign
+  of their `pitch` number.
+
+The values come from each design's simulation, so fine-tune them in the pool with **−/+** (steps of 0.05, saved in
+`designs.json`, kept on updates). **DEFAULTS** puts the design back. The autopilot is unaffected: it still can't be
+switched on from the controller.
 
 ### Thruster layout
 Motor power = `surge×forward + yaw×turn + heave×up + sway×sideways + pitch×tilt`, using the numbers in each
