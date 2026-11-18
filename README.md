@@ -47,6 +47,7 @@ The dashboard (800x480), captured running on a computer with simulated ROV data;
 | `config.toml` | pins, motor layout, speeds, safety settings |
 | `profiles.json` | drive profiles (edited on the screen: SETUP > PROFILES) |
 | `designs.json` | your changes to the frame-design trims (made on the screen: SETUP > DESIGN; not in the repo) |
+| `tests/` | automatic tests: `python3 -m unittest discover tests` (no Pi or controller needed) |
 | `camera.json` | camera flip setting |
 | `setup.sh` | one-command install / update from GitHub (see above) |
 | `updater.py` | automatic updates from GitHub (used by the dashboard) |
