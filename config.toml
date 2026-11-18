@@ -10,7 +10,7 @@ arm_switch_pin = -1      # optional physical toggle on the panel (switch to GND)
                          # When used, motors only run while this switch is ON.
 
 [control]
-design = "v13"           # frame design: v13 v14 v15 v16 v17. Pick it on the screen (SETUP > DESIGN);
+design = "v13"           # frame: "v13" (original) or "new" (new frame). Pick it on the screen (SETUP > EXTRAS > FRAME);
                          # each design trims the motors for its shape (see DEFAULT_DESIGNS in rov.py)
 drive_profile = "Standard"   # active drive profile. Profiles are edited on the case screen
                              # (SETUP > PROFILES) and stored in profiles.json. TRIANGLE = next profile.

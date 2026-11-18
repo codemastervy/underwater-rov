@@ -208,9 +208,9 @@ note so the props don't creep.
   button turns red: TAP AGAIN). Motors are switched off first. After SHUT DOWN, wait ~20 s, then unplug; to turn
   it back on, unplug and plug the power back in (a Pi can't switch itself on).
 - **SETUP › EXTRAS**: keyboard drive, arm sound and tune, **software update** (version, CHECK NOW / UPDATE NOW).
-- **SETUP › DESIGN**: pick the frame you built: **v13** (current robot, no trim: the default), **v14**, **v15**,
-  **v16** or **v17** (the hull designs in [aquabots-rov-hull](https://github.com/codemastervy/aquabots-rov-hull), one
-  branch each). Each design trims the motors for its shape; see [Frame designs](#frame-designs). Only while SAFE.
+- **SETUP › EXTRAS › FRAME**: pick the frame on the robot: **V13 ORIGINAL** (no trim: the default) or **NEW FRAME**
+  (the pool-noodle frame in [aquabots-rov-hull](https://github.com/codemastervy/aquabots-rov-hull)). **TRIM ▸** (or
+  SETUP › DESIGN) fine-tunes it in the pool; see [Frame designs](#frame-designs). Only while SAFE.
 - **CAMERA**: live feed from the USB capture card. **FLIP** cycles normal → upside down → mirrored.
   **PICTURE** opens the picture controls: **ISO** (100 = normal, up to 400 for dark water; it brightens the picture
   digitally because the capture card has no real ISO), brightness, contrast, **colour** (saturation) and **RED / GREEN /
@@ -221,16 +221,13 @@ note so the props don't creep.
 - If the edges are cut off on another monitor: `python3 /opt/rov/rov_gui.py --margins 30,20,30,20`.
 
 ### Frame designs
-Each hull design balances differently, so **SETUP › DESIGN** applies its own trim on top of the `[[motor]]` numbers
+Each frame balances differently, so **SETUP › EXTRAS › FRAME** (or SETUP › DESIGN) applies its own trim on top of the `[[motor]]` numbers
 (they stay as wired). The choice is saved as `design = "..."` in `config.toml`:
 
 | Design | Tilt power | Front up motor | Rear up motor | Level when driving | Why |
 |---|---|---|---|---|---|
-| v13 current robot | 1.00 | 1.00 | 1.00 | 0.00 | unchanged |
-| v14 flooded hull | 0.40 | 1.00 | 1.00 | 0.00 | a full tilt stick can't loop it |
-| v15 open frame | 0.40 | 1.00 | 1.00 | 0.00 | a full tilt stick can't loop it |
-| v16 classic | 0.40 | 0.65 | 1.00 | 0.20 | heavier at the back (side motors trail), so it climbs level |
-| v17 v13 shape | 0.25 | 1.00 | 0.92 | 0.27 | floats sit lower: softer tilt; level climbing and driving |
+| v13 original | 1.00 | 1.00 | 1.00 | 0.00 | unchanged |
+| New frame | 0.25 | 0.75 | 1.00 | 0.30 | rights itself gently, so softer tilt; the side motors sit above the weight, so it tilts while driving and climbing unless trimmed |
 
 - **Tilt power** scales how hard the tilt control pushes the front/rear up motors.
 - **Front/Rear up motor** is each motor's share of up/down.
