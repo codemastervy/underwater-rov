@@ -7,7 +7,7 @@
 # - Downloads the latest version from GitHub into ~/underwater-rov (no git needed).
 # - Installs everything it needs (Python libraries, Bluetooth, ffmpeg) and the 'rov' service + dashboard.
 # - Updating keeps your settings: motor flips (config.toml), drive profiles, camera, autopilot, arm tune.
-# - After this, the dashboard updates itself: SETUP > EXTRAS > UPDATE NOW when it says UPDATE READY.
+# - After this, the dashboard updates itself: UPDATE NOW on the SYSTEM page when it says UPDATE READY.
 # - New Pi only: sets the screen to 800x480 for the case monitor (skip with ROV_SCREEN=none).
 set -euo pipefail
 

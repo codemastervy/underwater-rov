@@ -10,10 +10,10 @@ arm_switch_pin = -1      # optional physical toggle on the panel (switch to GND)
                          # When used, motors only run while this switch is ON.
 
 [control]
-design = "v13"           # frame: "v13" (original) or "new" (new frame). Pick it on the screen (SETUP > EXTRAS > FRAME);
+design = "v13"           # frame: "v13" (original) or "new" (new frame). Pick it on the screen (MOTORS page);
                          # each design trims the motors for its shape (see DEFAULT_DESIGNS in rov.py)
-drive_profile = "Standard"   # active drive profile. Profiles are edited on the case screen
-                             # (SETUP > PROFILES) and stored in profiles.json. TRIANGLE = next profile.
+drive_profile = "Standard"   # profile in use: a controller profile (controller drives) or a keyboard
+                             # profile (keyboard drives). Edited on the PROFILES page, stored in profiles.json.
 deadzone = 0.08          # ignore stick movement smaller than this (0..1)
 expo = 0.35              # 0 = linear, 1 = very soft around center (finer control at low speed)
 ramp_per_second = 3.0    # max change in motor power per second (3.0 = 0 to full in 0.33 s). Protects battery/drivers
@@ -27,8 +27,7 @@ invert_yaw = false
 invert_heave = false
 invert_sway = false
 invert_pitch = false
-keyboard_drive = false   # drive with a keyboard (WASD) - switch on the screen: SETUP > EXTRAS
-arm_sound = true         # motors play a short tune when armed (SETUP > EXTRAS)
+arm_sound = true         # motors play a short tune when armed (SYSTEM page)
 sound_volume = 5         # 1-15: PWM duty % used for the tune
 
 [controllers]

@@ -15,38 +15,32 @@ curl -fsSL https://raw.githubusercontent.com/codemastervy/underwater-rov/main/se
 - Nothing needs installing first, not even git.
 - **After that you never need the command again:** the dashboard checks GitHub for a new version when it starts and every
   30 minutes (whenever the Pi has internet). When there is one, the main page shows **⬆ UPDATE READY**; tap it (or
-  **SETUP › EXTRAS › UPDATE NOW**) while SAFE. It downloads, installs and restarts by itself in under a minute.
+  **SYSTEM › UPDATE NOW**) while SAFE. It downloads, installs and restarts by itself in under a minute.
   Settings are kept. No internet (at the pool)? It just says so and tries again later.
 
 ## Screenshots
-The dashboard (800x480), captured running on a computer with simulated ROV data; the camera picture is a placeholder:
+The dashboard, with simulated ROV data; the camera picture is a test pattern:
 
-| Main (armed, driving) | Camera + PICTURE (ISO, RGB) |
+| DRIVE with a controller profile | DRIVE with a keyboard profile |
 |---|---|
-| ![Main page](docs/screenshots/main.png) | ![Camera page](docs/screenshots/camera.png) |
-| **SETUP › EXTRAS** (keyboard drive, arm tune, software update) | Keyboard driving |
-| ![Extras page](docs/screenshots/extras.png) | ![Keyboard driving](docs/screenshots/keyboard.png) |
-| **SETUP › MOTORS** (flip motors, Pi SHUT DOWN / RESTART) | **SETUP › PROFILES** (profile editor) |
-| ![Motors page](docs/screenshots/motors.png) | ![Profiles page](docs/screenshots/profiles.png) |
-| **SETUP › AUTOPILOT** | Mission editor |
-| ![Autopilot page](docs/screenshots/autopilot.png) | ![Mission page](docs/screenshots/mission.png) |
-| Autopilot working (green) | Autopilot unsure: take control (flashing red) |
-| ![Autopilot OK](docs/screenshots/status-good.png) | ![Take control warning](docs/screenshots/alert.png) |
-| Line following (camera view) | PICK: click an object to follow its colour |
-| ![Line following](docs/screenshots/camera-line.png) | ![Pick a colour](docs/screenshots/camera-pick.png) |
-| Keyboard profile (PROFILES page) | |
-| ![Keyboard profile](docs/screenshots/profiles-keys.png) | |
-| SET TUNE: paste a ringtone | Camera full screen |
-| ![Set tune](docs/screenshots/extras-tune.png) | ![Camera full screen](docs/screenshots/camera-full.png) |
+| ![Drive, controller](docs/screenshots/drive.png) | ![Drive, keyboard](docs/screenshots/drive-keyboard.png) |
+| **CAMERA** + PICTURE (ISO, RGB) | **AUTOPILOT** |
+| ![Camera](docs/screenshots/camera.png) | ![Autopilot](docs/screenshots/autopilot.png) |
+| **PROFILES**: controller profile | **PROFILES**: keyboard profile (keyboard focus ring) |
+| ![Profiles](docs/screenshots/profiles.png) | ![Keyboard profile](docs/screenshots/profiles-keys.png) |
+| **MOTORS** (direction, frame trim) | **SYSTEM** (sound, update, screen, power) |
+| ![Motors](docs/screenshots/motors.png) | ![System](docs/screenshots/system.png) |
+| Mission editor | Picking a key with the mouse |
+| ![Mission](docs/screenshots/mission.png) | ![Key picker](docs/screenshots/key-picker.png) |
 
 ## Files
 | File | What it is |
 |---|---|
 | `rov.py` | the motor program (controller → motors), runs as the `rov` service |
-| `rov_gui.py` | full-screen dashboard for the 800x480 case monitor (status, motor flip, profile editor, camera) |
+| `rov_gui.py` | starts the dashboard (pygame, full screen, any resolution); its code is in `dashboard/` |
 | `config.toml` | pins, motor layout, speeds, safety settings |
-| `profiles.json` | drive profiles (edited on the screen: SETUP > PROFILES) |
-| `designs.json` | your changes to the frame-design trims (made on the screen: SETUP > DESIGN; not in the repo) |
+| `profiles.json` | drive profiles (edited on the PROFILES page) |
+| `designs.json` | your changes to the frame-design trims (made on the MOTORS page; not in the repo) |
 | `tests/` | automatic tests: `python3 -m unittest discover tests` (no Pi or controller needed) |
 | `camera.json` | camera flip setting |
 | `setup.sh` | one-command install / update from GitHub (see above) |
@@ -129,57 +123,57 @@ It starts at 50 % speed. The motors ramp up smoothly rather than jumping to full
 | R2 / L2 | up / down | up / down |
 | D-pad ↕ | tilt nose up / down | tilt nose up / down |
 
-Make as many profiles as you like on the case screen with the mouse: **SETUP > PROFILES**. Each control (sticks, triggers,
-D-pad) can be set to forward, turn, up/down, tilt, sideways, left side or right side, with its own invert and power.
-The profile editor can't be opened from the controller.
+### Profiles
+Exactly **one profile is in use**, and its type decides what drives: a **controller profile** (PAD) or a **keyboard
+profile** (KEYS). Only the device that drives can arm. STOP works from everything at all times.
 
-### Keyboard drive
-Plug a keyboard into the Pi and switch **KEYBOARD DRIVE** on in **SETUP › EXTRAS**. It works with or without the controller.
+- Controller: **TRIANGLE** = next controller profile. Keyboard: **P** = next keyboard profile. Coming from the other
+  kind, they go to the one used last. Or pick any profile from the PROFILE button on DRIVE. Only while SAFE.
+- **PROFILES (F4)**: make, copy, rename, delete and edit them; **USE** puts one in use. Changes are saved at once.
+  - Controller profile: each control (sticks, triggers, D-pad) can be forward, turn, up/down, tilt, sideways, left side or
+    right side, with its own reverse and power.
+  - Keyboard profile: press or click an action's button, then the key. A key that is already used swaps.
 
-| Key | Action |
+**Keyboard profiles** (plug a keyboard into the Pi; no controller needed). Built in: **Keys WASD** and **Keys arrows**.
+
+| Key | Action (Keys WASD) |
 |---|---|
-| **Enter** | **ARM** (no keys held) |
+| **Hold Enter** | **ARM** (no other key held; on DRIVE or CAMERA) |
 | **Esc** | **STOP** |
 | W / S | forward / back |
 | A / D | turn left / right |
 | Space / Shift | up / down |
 | R / F | tilt nose up / down |
-| E / Q (or + / −) | speed up / down |
+| E / Q | speed up / down |
 
-**Keyboard profiles:** which key does what comes from a **keyboard profile** on **SETUP › PROFILES** (EXTRAS › EDIT
-KEYS jumps there). Each profile is either a **controller** profile (PAD) or a **keyboard** profile (KEYS): make one with
-**+ CONTROLLER** or **+ KEYBOARD**, or COPY one. In a keyboard profile, tap an action's box and press the key you want;
-a key that's already used swaps. **SAVE + USE** makes it the one in use. Built in: **Keys WASD** and **Keys arrows**
-(arrow keys, Space/Ctrl up/down, PgUp/PgDn tilt, = / − speed). One controller profile and one keyboard profile are in
-use at a time (● in the list): **TRIANGLE** = next controller profile, **P** = next keyboard profile (while SAFE).
-Enter = ARM and Esc = STOP can't be changed.
-
-The dashboard sends the held keys about 20 times a second. If that stops for 0.5 s (dashboard closed or frozen), the keys
-count as released, and if no controller is connected the motors disarm.
+Enter, Esc, Tab and F1-F12 can't be bound. The dashboard reports the held keys 20 times a second. If that stops for 0.5 s
+(dashboard closed or frozen, or another window has the keyboard) **the motors disarm**.
+The old KEYBOARD DRIVE switch is gone: if it was on, the update puts a keyboard profile in use.
 
 ### Autopilot
-**SETUP › AUTOPILOT**, mouse only. The controller can't switch it on, and it is **OFF at every start-up**.
-Switch it ON, arm the ROV, then click a mode (click it again or **AUTO OFF** to stop):
+**AUTOPILOT (F3)**. The controller can't switch it on, and it is **OFF at every start-up**.
+Switch it ON, arm the ROV, then pick a mode (pick it again or **MODE OFF** to stop). On DRIVE and CAMERA the keys
+**1-5** pick a mode and **0** switches it off:
 
 | Mode | What it does |
 |---|---|
-| **CRUISE** | Keeps the thrust you're using when you click it (hold the stick/key, click, let go) |
+| **CRUISE** | Keeps the thrust you're using when you pick it (hold the stick/key, pick it, let go) |
 | **LINE** | Follows a line seen by the camera (pool lane line, tape). Needs the camera to see the bottom |
 | **TARGET** | Steers to a coloured object and stops at TARGET DISTANCE |
 | **HEADING** | Holds still, facing the same way, using how the camera picture moves (needs a floor/rocks with detail in view) |
 | **MISSION** | Runs timed steps (EDIT MISSION: up to 8 steps of forward/back/up/down/turn/tilt/hover) |
 
-**Taking over:** any stick, trigger, D-pad or keyboard-drive key switches the autopilot mode off immediately.
-(CRUISE: the input you were holding when you clicked sets the speed; after you let go, the next movement takes over.)
+**Taking over:** any stick, trigger, D-pad or drive key switches the autopilot mode off immediately.
+(CRUISE: the input you were holding when you picked it sets the speed; after you let go, the next movement takes over.)
 
-**Target colour:** pick one from the list, or on the camera page press **PICK** and click the object in the video.
+**Target colour:** pick one from the list, or on the camera page press **PICK** and click the object in the video (or move the crosshair with the arrow keys and press Enter).
 Its exact colour (as the camera sees it underwater) becomes the target, shown as "■ PICKED".
 
 Settings: **HOVER TRIM** / **NOSE TRIM** (constant thrust so it hovers level; active whenever the autopilot is ON),
 AUTO POWER (most it may use), AUTO SPEED, LINE / TARGET COLOUR, TARGET DISTANCE, STEERING.
 CAMERA VIEW shows what it's tracking.
 
-**Status bar** (main and camera pages, only while the autopilot is switched ON):
+**Status bar** (every page, only while the autopilot is switched ON):
 - **Green ✓**: a mode is engaged and working.
 - **Flashing red ⚠ TAKE CONTROL NOW**: it lost the line/target or the camera picture. It hovers, and after 3 s
   switches itself off ("AUTOPILOT OFF – YOU HAVE CONTROL"). Touching any control clears the warning at once.
@@ -194,34 +188,45 @@ note so the props don't creep.
 
 - **Default: an FPV-drone style arming sound (5 s)**: 3 rising ESC power-up tones, a low-HIGH "signal OK" pair, then a
   long ARMED beep.
-- **Touch any control (stick, trigger, D-pad, WASD) and the tune stops at once** so you can drive straight away.
+- **Touch any control (stick, trigger, D-pad, drive keys) and the tune stops at once** so you can drive straight away.
   STOP / CIRCLE stops it too.
 - **SET TUNE**: paste any ringtone in **RTTTL** format (the old Nokia ringtone text, e.g.
-  `Name:d=4,o=5,b=120:c,e,g,2c6`; free RTTTL versions of most songs are online), then **SAVE**. Up to 5 s is played.
-  **DEFAULT TUNE** goes back to the FPV sound. Your tune is kept in `tune.txt` (survives updates).
-- **SETUP › EXTRAS** also has on/off, volume (1–15) and **TEST** (plays it while SAFE; tap again to stop).
+  `Name:d=4,o=5,b=120:c,e,g,2c6`; free RTTTL versions of most songs are online), then **OK**. Up to 5 s is played.
+  **DEFAULT** goes back to the FPV sound. Your tune is kept in `tune.txt` (survives updates).
+- **SYSTEM (F6)** also has on/off, volume (1–15) and **TEST** (plays it while SAFE; tap again to stop).
 
-### Dashboard (case monitor)
-- Main page: armed/SAFE, profile, speed, live motor bars, big **STOP** button.
-- **SETUP › MOTORS**: **FLIP** reverses a motor that pushes the wrong way (only while SAFE, saved automatically).
-  **⏻ SHUT DOWN** powers the Pi off safely and **↻ RESTART** reboots it: only while SAFE, and you tap twice (the
-  button turns red: TAP AGAIN). Motors are switched off first. After SHUT DOWN, wait ~20 s, then unplug; to turn
-  it back on, unplug and plug the power back in (a Pi can't switch itself on).
-- **SETUP › EXTRAS**: keyboard drive, arm sound and tune, **software update** (version, CHECK NOW / UPDATE NOW).
-- **SETUP › EXTRAS › FRAME**: pick the frame on the robot: **V13 ORIGINAL** (no trim: the default) or **NEW FRAME**
-  (the pool-noodle frame in [aquabots-rov-hull](https://github.com/codemastervy/aquabots-rov-hull)). **TRIM ▸** (or
-  SETUP › DESIGN) fine-tunes it in the pool; see [Frame designs](#frame-designs). Only while SAFE.
-- **CAMERA**: live feed from the USB capture card. **FLIP** cycles normal → upside down → mirrored.
-  **PICTURE** opens the picture controls: **ISO** (100 = normal, up to 400 for dark water; it brightens the picture
-  digitally because the capture card has no real ISO), brightness, contrast, **colour** (saturation) and **RED / GREEN /
-  BLUE** each on their own (water makes things blue-green: try more RED, less BLUE). Saved in `camera.json`; RESET goes
-  back to normal. **⛶ FULL SCREEN** makes the video fill the screen; STOP and ARMED/SAFE stay in the side bars,
-  **EXIT** goes back.
-- Keyboard: Esc = stop (also Space when keyboard drive is off), +/- = speed, p = next profile, c = camera, F11 = full screen.
-- If the edges are cut off on another monitor: `python3 /opt/rov/rov_gui.py --margins 30,20,30,20`.
+### Dashboard
+Opens full screen at whatever resolution the screen has, with no frame-rate limit. **Everything works with the mouse
+alone, and with the keyboard alone.** (Arming is not on the mouse on purpose: OPTIONS, or holding Enter.)
+
+| Key | |
+|---|---|
+| **Esc** | STOP, always. If it was already SAFE it also goes back |
+| F1-F6 | DRIVE, CAMERA, AUTOPILOT, PROFILES, MOTORS, SYSTEM (F2 again: full-screen video) |
+| arrows, Tab / Enter / Backspace | move the focus ring / use / back |
+| ← → on a value | change it |
+| P, + −, C, 1-5, 0 | on DRIVE and CAMERA: keyboard profile, speed, camera, autopilot mode, mode off |
+| Space | on DRIVE and CAMERA: STOP, unless the keyboard profile uses it |
+| F10, F11, F12 | list of keys, full screen / window, frame rate |
+
+With a keyboard profile, keys drive on DRIVE and CAMERA until you press **Tab**; then they work the screen and can't
+drive until **Backspace** (or a drive key that isn't an arrow). On the other pages they never drive.
+
+- **CAMERA**: live feed from the USB capture card. **FLIP** cycles normal, upside down, mirrored. **PICTURE**: **ISO** (100 =
+  normal, up to 400 for dark water; done digitally), brightness, contrast, colour and **RED / GREEN / BLUE** (water makes
+  things blue-green: try more RED, less BLUE). It changes live and is saved in `camera.json`. **FULL**: full-screen video.
+- **MOTORS**: **FLIP** reverses a motor that pushes the wrong way; **FRAME** picks the frame on the robot and its trim, see
+  [Frame designs](#frame-designs). Only while SAFE.
+- **SYSTEM**: arm sound, software update, screen, **SHUT DOWN** / **RESTART** (only while SAFE, asks first). After SHUT DOWN
+  wait ~20 s, then unplug; to turn it back on, unplug and plug the power back in.
+
+Options: `--windowed`, `--size 1024x614`, `--fps 60` (limit; keeps a Pi in a closed case cooler), `--show-fps`,
+`--page camera`, `--margins 30,20,30,20` (pixels hidden by the monitor; the 800x480 case monitor is set already).
+
+Try it on a computer without the ROV: `python3 rov.py --dry-run` in one terminal, `python3 rov_gui.py` in another.
 
 ### Frame designs
-Each frame balances differently, so **SETUP › EXTRAS › FRAME** (or SETUP › DESIGN) applies its own trim on top of the `[[motor]]` numbers
+Each frame balances differently, so **MOTORS › FRAME** applies its own trim on top of the `[[motor]]` numbers
 (they stay as wired). The choice is saved as `design = "..."` in `config.toml`:
 
 | Design | Tilt power | Front up motor | Rear up motor | Level when driving | Why |
@@ -235,7 +240,7 @@ Each frame balances differently, so **SETUP › EXTRAS › FRAME** (or SETUP ›
   of their `pitch` number.
 
 The values come from each design's simulation, so fine-tune them in the pool with **−/+** (steps of 0.05, saved in
-`designs.json`, kept on updates). **DEFAULTS** puts the design back. The autopilot is unaffected: it still can't be
+`designs.json`, kept on updates). **DEFAULT TRIM** puts the design back. The autopilot is unaffected: it still can't be
 switched on from the controller.
 
 ### Thruster layout
@@ -245,7 +250,7 @@ right and left do forward and turn.
 
 ## Safety behaviour
 - Starts **disarmed**. The enable line stays low and nothing spins until you press OPTIONS.
-- It disarms on: controller disconnect, Bluetooth link going quiet for 0.5 s (uses the PS4/PS5 motion
+- It disarms on: controller disconnect, the keyboard link going quiet for 0.5 s (keyboard profile), Bluetooth link going quiet for 0.5 s (uses the PS4/PS5 motion
   sensor stream as a heartbeat), panel switch off, program stop/crash, or pressing CIRCLE.
 - After any disconnect you must press OPTIONS again. A controller that reconnects will never start the motors by itself.
 

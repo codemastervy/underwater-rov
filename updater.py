@@ -1,7 +1,7 @@
-"""Automatic updates from GitHub (used by rov_gui.py; needs only Python and an internet connection).
+"""Automatic updates from GitHub (used by the dashboard; needs only Python and an internet connection).
 
 The dashboard checks GitHub at start-up and every 30 minutes. When a newer version is there it
-shows "UPDATE READY"; one tap on SETUP > EXTRAS > UPDATE NOW (only while SAFE) installs it and
+shows "UPDATE READY"; UPDATE NOW on the SYSTEM page (only while SAFE) installs it and
 restarts the program. Your settings are never touched (motor flips, profiles, camera, autopilot,
 mission, arm tune).
 
@@ -20,9 +20,6 @@ REPO = "codemastervy/underwater-rov"
 BRANCH = "main"
 HERE = os.path.dirname(os.path.abspath(__file__))
 VERSION_FILE = os.path.join(HERE, "VERSION")
-# your settings: never overwritten by an update
-KEEP = {"config.toml", "profiles.json", "designs.json", "camera.json", "autopilot.json", "mission.json", "tune.txt", "keymap.json",
-        "VERSION", ".mega-firmware"}
 CHECK_EVERY = 30 * 60
 UA = {"User-Agent": "rov-updater"}
 
@@ -67,24 +64,13 @@ def download(sha, into):
     return os.path.join(into, dirs[0])
 
 
-def copy_files(src, dest):
-    """Copy the program files over the installed ones, keeping your settings."""
-    for root, dirs, files in os.walk(src):
-        dirs[:] = [d for d in dirs if d not in (".git", "build", "__pycache__")]
-        rel = os.path.relpath(root, src)
-        os.makedirs(os.path.join(dest, rel), exist_ok=True)
-        for name in files:
-            if rel == "." and name in KEEP and os.path.exists(os.path.join(dest, name)):
-                continue
-            shutil.copy2(os.path.join(root, name), os.path.join(dest, rel, name))
-
-
-def file_changed(src, dest, name):
-    try:
-        with open(os.path.join(src, name), "rb") as a, open(os.path.join(dest, name), "rb") as b:
-            return a.read() != b.read()
-    except OSError:
-        return True
+def copy_program(src, dest):
+    """Copy the program over the installed one (your settings are not among these files)."""
+    for name in os.listdir(src):
+        if name.endswith((".py", ".sh")) or name == "README.md":
+            shutil.copy2(os.path.join(src, name), os.path.join(dest, name))
+    shutil.rmtree(os.path.join(dest, "dashboard"), ignore_errors=True)
+    shutil.copytree(os.path.join(src, "dashboard"), os.path.join(dest, "dashboard"))
 
 
 class Updater:
@@ -174,9 +160,7 @@ def install_files(src, dest):
     except (OSError, subprocess.SubprocessError):
         ok = False
     if not ok:
-        for name in os.listdir(src):
-            if name.endswith((".py", ".sh")) or name == "README.md":
-                shutil.copy2(os.path.join(src, name), os.path.join(dest, name))
+        copy_program(src, dest)
         return ["copied the program only (sudo asked for a password, packages not checked)"]
     return []
 
