@@ -4,6 +4,7 @@ __pycache__/
 .DS_Store
 autopilot.json
 mission.json
+screen.json
 tune.txt
 VERSION
 keymap.json

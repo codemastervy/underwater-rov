@@ -3,6 +3,7 @@ import subprocess
 
 from ..dialogs import ConfirmDialog, HelpDialog, TextDialog
 from ..layout import columns, rows
+from ..screen import EDGES
 from ..theme import ACCENT, AMBER, BODY, GAP, GREEN, LABEL, MUTED, RED, SMALL
 from . import Page
 
@@ -16,10 +17,10 @@ class SystemPage(Page):
     def draw(self, area):
         ui = self.ui
         if ui.portrait:
-            sound, update, screen, power = rows(area, 1.5, 1, 1, 1, gap=ui.px(GAP))
+            sound, update, screen, power = rows(area, 1.5, 1, 1.2, 1, gap=ui.px(GAP))
         else:
             left, right = columns(area, 1.1, 1, gap=ui.px(GAP))
-            sound, screen = rows(left, 1.9, 1, gap=ui.px(GAP))
+            sound, screen = rows(left, 1.5, 1, gap=ui.px(GAP))
             update, power = rows(right, 1, 1.15, gap=ui.px(GAP))
         self._draw_sound(ui.card(sound, "ARM SOUND"))
         self._draw_update(ui.card(update, "SOFTWARE UPDATE"))
@@ -76,7 +77,12 @@ class SystemPage(Page):
 
     def _draw_screen(self, area):
         ui, app = self.ui, self.app
-        full, fps, keys = columns(area, 1.2, 1.2, 0.8, gap=ui.px(6))
+        edge, buttons = rows(area, 1, 1.3, gap=ui.px(6))
+        new = ui.choice(self._labelled(edge, "Edge margin"), app.edge, [(e, f"{e}%") for e in EDGES], "edge",
+                        enabled=app.fullscreen and not app.margins)
+        if new is not None:
+            app.set_edge(new)
+        full, fps, keys = columns(buttons, 1.2, 1.2, 0.8, gap=ui.px(6))
         if ui.button(full, "FULL SCREEN" if app.fullscreen else "WINDOW", "fullscreen",
                      "selected" if app.fullscreen else "normal", sub="F11", size=BODY):
             app.set_fullscreen(not app.fullscreen)

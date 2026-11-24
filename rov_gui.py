@@ -9,7 +9,7 @@ keeps running with a controller profile and disarms with a keyboard profile.
   --size 1024x614       size of that window
   --fps 60              limit the frame rate (0 = no limit, the default)
   --show-fps            show the frame rate (F12 switches)
-  --margins 32,22,32,22 left, top, right, bottom: pixels the monitor hides
+  --margins 32,22,32,22 left, top, right, bottom: pixels the monitor hides (instead of SYSTEM > Edge margin)
   --page camera         page to start on
 """
 import argparse
@@ -46,7 +46,7 @@ def repair():
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--windowed", action="store_true")
-    parser.add_argument("--size", type=lambda s: numbers(s, "x"), default=(1024, 614))
+    parser.add_argument("--size", type=lambda s: numbers(s, "x"), default=None)
     parser.add_argument("--fps", type=int, default=0)
     parser.add_argument("--show-fps", action="store_true")
     parser.add_argument("--margins", type=lambda s: numbers(s, ","))

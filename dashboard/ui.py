@@ -59,9 +59,9 @@ class UI(Painter):
         self._scroll = {}
 
     # ------------------------------------------------------------ frame
-    def begin(self, surface, dt):
-        self.surface, self.dt, self.now = surface, dt, time.monotonic()
-        self.resize(surface.get_size())
+    def begin(self, surface, area, dt):
+        self.surface, self.area, self.dt, self.now = surface, area, dt, time.monotonic()
+        self.resize(area.size)
         self.widgets = []
         self.hint = ""
         self.live = self.menu is None
@@ -337,7 +337,7 @@ class UI(Painter):
             self._answer = (menu.wid, value)
 
     def _draw_menu(self):
-        menu, screen = self.menu, inset(self.surface.get_rect(), self.px(6))
+        menu, screen = self.menu, inset(self.area, self.px(6))
         outside = self.click
         self.layer()
         self.live = True

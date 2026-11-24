@@ -14,6 +14,7 @@ import pygame
 
 import rov as core
 
+from . import screen
 from .camera import Camera
 from .dialogs import HelpDialog
 from .keyboard import KeyboardDrive
@@ -38,8 +39,6 @@ except ImportError:
     updater = None
 
 TABS = ("drive", "camera", "autopilot", "profiles", "motors", "system")          # F1 - F6
-CASE_MONITOR, CASE_MARGINS = (800, 480), (32, 22, 32, 22)      # that monitor hides the edges of the picture
-WINDOW = (1024, 614)
 NICE = 5                 # let the motor program go first
 SLOW = 0.5               # seconds between update checks
 MOUSE_JITTER = 3         # pixels: less isn't the pilot moving the mouse
@@ -47,12 +46,13 @@ NEWS = 4.0               # seconds a message from the ROV program is shown befor
 
 
 class App:
-    def __init__(self, fullscreen=True, size=WINDOW, margins=None, fps=0, show_fps=False, page="drive"):
+    def __init__(self, fullscreen=True, size=None, margins=None, fps=0, show_fps=False, page="drive"):
         pygame.display.init()
         pygame.font.init()
         pygame.display.set_caption("ROV")
         pygame.key.set_repeat(350, 45)
-        self.window_size, self.margins, self.fps, self.show_fps = size, margins, fps, show_fps
+        self.window_size, self.margins, self.fps, self.show_fps = size or screen.window_size(), margins, fps, show_fps
+        self.saved_edge = screen.load_edge()
         self.set_fullscreen(fullscreen)
         self.clock = pygame.time.Clock()
         self.ui = UI()
@@ -82,11 +82,24 @@ class App:
         else:
             pygame.display.set_mode(self.window_size, pygame.RESIZABLE)
 
+    @property
+    def edge(self):
+        """Percent of the screen that stays empty on each side."""
+        if not self.fullscreen:
+            return 0
+        size = pygame.display.get_surface().get_size()
+        return screen.default_edge(size) if self.saved_edge is None else self.saved_edge
+
+    def set_edge(self, edge):
+        self.saved_edge = edge
+        screen.save_edge(edge)
+
     def _safe_area(self, surface):
-        left, top, right, bottom = self.margins or (
-            CASE_MARGINS if self.fullscreen and surface.get_size() == CASE_MONITOR else (0, 0, 0, 0))
-        area = surface.get_rect()
-        return pygame.Rect(left, top, area.w - left - right, area.h - top - bottom)
+        size = width, height = surface.get_size()
+        if not self.margins:
+            return screen.visible(size, self.edge)
+        left, top, right, bottom = self.margins
+        return pygame.Rect(left, top, width - left - right, height - top - bottom)
 
     def run(self):
         os.setpriority(os.PRIO_PROCESS, 0, max(NICE, os.getpriority(os.PRIO_PROCESS, 0)))
@@ -342,10 +355,10 @@ class App:
     def _draw(self, dt):
         ui = self.ui
         surface = pygame.display.get_surface()
-        ui.begin(surface, dt)
+        area = self._safe_area(surface)
+        ui.begin(surface, area, dt)
         ui.live = ui.live and not self.dialogs
         surface.fill(BLACK if self.page.name == "camera" and self.page.full else BACKGROUND)
-        area = self._safe_area(surface)
         self._draw_page(inset(area, ui.px(8)))
         if area.size != surface.get_size():
             pygame.draw.rect(surface, FAINT, area, 1)       # the edge of what the monitor should show

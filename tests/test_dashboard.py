@@ -145,6 +145,51 @@ class LayoutTests(DashboardTest):
                         self.assertFalse(rect.inflate(-2, -2).colliderect(b), f"{where}: {wid} overlaps {other}")
                 self.app.ui.written = None
 
+    def test_everything_stays_inside_the_edges(self):
+        for size in ((800, 480), (1366, 768), (640, 400), (480, 800)):
+            self.start(size)
+            self.app.fullscreen = True
+            for edge in (None, 12):
+                self.app.saved_edge = edge
+                for variant in self.variants():
+                    self.app.ui.written = []
+                    self.step(1)
+                    where = f"{size} {edge} {variant}"
+                    for what, rect in self.app.ui.written + self.app.ui.widgets:
+                        self.assertTrue(self.app.ui.area.contains(rect), f"{where}: {what!r} is in the hidden edge")
+                    self.app.ui.written = None
+
+    def test_menu_stays_inside_the_edges(self):
+        self.app.fullscreen = True
+        self.app.saved_edge = 12
+        self.app.show("system")
+        self.step()
+        self.click("edge")
+        self.assertTrue(self.app.ui.area.contains(self.app.ui.menu.box))
+
+    def test_edge_is_picked_and_kept(self):
+        self.app.fullscreen = True
+        self.app.show("system")
+        self.step()
+        self.assertEqual(self.app.edge, 5)              # the case monitor
+        self.focus("edge")
+        self.press(pygame.K_RIGHT)
+        self.assertEqual(self.app.edge, 6)
+        self.assertEqual(self.app.ui.area, pygame.Rect(48, 29, 704, 422))
+        self.assertEqual(dashboard.screen.load_edge(), 6)
+        self.app.fullscreen = False
+        self.assertEqual(self.app.edge, 0)
+
+    def test_bad_saved_edge_is_ignored(self):
+        for text in ("", "[]", '{"edge": 99}', '{"edge": "5"}', '{"edge": true}'):
+            with open(dashboard.screen.settings_path(), "w") as f:
+                f.write(text)
+            self.assertIsNone(dashboard.screen.load_edge())
+
+    def test_window_fits_a_small_desktop(self):
+        with mock.patch.object(pygame.display, "get_desktop_sizes", lambda: [(800, 480)]):
+            self.assertEqual(dashboard.screen.window_size(), (720, 432))
+
     def test_window_can_be_resized(self):
         for size in ((1366, 768), (500, 900), (800, 480)):
             pygame.display.set_mode(size, pygame.RESIZABLE)

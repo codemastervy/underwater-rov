@@ -29,6 +29,7 @@ class Painter:
 
     def __init__(self):
         self.surface = None
+        self.area = pygame.Rect(0, 0, 0, 0)          # the part of the surface that can be seen
         self.size = (0, 0)
         self.scale = 1.0
         self.portrait = False
@@ -39,7 +40,7 @@ class Painter:
         self._gliding = {}
 
     def resize(self, size):
-        """Work out the scale for this window size. Large screens grow the interface a bit slower than the
+        """Work out the scale for this much room. Large screens grow the interface a bit slower than the
         screen, so they also get more room instead of only bigger letters."""
         if size == self.size:
             return

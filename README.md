@@ -217,11 +217,12 @@ drive until **Backspace** (or a drive key that isn't an arrow). On the other pag
   things blue-green: try more RED, less BLUE). It changes live and is saved in `camera.json`. **FULL**: full-screen video.
 - **MOTORS**: **FLIP** reverses a motor that pushes the wrong way; **FRAME** picks the frame on the robot and its trim, see
   [Frame designs](#frame-designs). Only while SAFE.
-- **SYSTEM**: arm sound, software update, screen, **SHUT DOWN** / **RESTART** (only while SAFE, asks first). After SHUT DOWN
+- **SYSTEM**: arm sound, software update, screen (**Edge margin**: if the monitor hides the edges of the picture, raise
+  it until you see the thin frame on all sides; the 800x480 case monitor starts at 5%), **SHUT DOWN** / **RESTART** (only while SAFE, asks first). After SHUT DOWN
   wait ~20 s, then unplug; to turn it back on, unplug and plug the power back in.
 
 Options: `--windowed`, `--size 1024x614`, `--fps 60` (limit; keeps a Pi in a closed case cooler), `--show-fps`,
-`--page camera`, `--margins 30,20,30,20` (pixels hidden by the monitor; the 800x480 case monitor is set already).
+`--page camera`, `--margins 30,20,30,20` (pixels hidden by the monitor, instead of **Edge margin**).
 
 Try it on a computer without the ROV: `python3 rov.py --dry-run` in one terminal, `python3 rov_gui.py` in another.
 

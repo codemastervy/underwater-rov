@@ -86,8 +86,7 @@ class CameraPage(Page):
     def draw(self, area):
         ui = self.ui
         if self.full:
-            screen = ui.surface.get_rect()
-            video = fit(screen, WIDTH, HEIGHT)
+            video = fit(ui.area, WIDTH, HEIGHT)
             self._draw_video(video)
             self._draw_full_controls(area)
         else:
@@ -218,8 +217,7 @@ class CameraPage(Page):
     def _draw_full_controls(self, area):
         """Corners of the full-screen video (in the black side bars when there are any)."""
         ui, status = self.ui, self.status
-        width = max(ui.px(72), min(ui.px(150), (ui.surface.get_width() - fit(ui.surface.get_rect(), WIDTH, HEIGHT).w)
-                                   // 2 - ui.px(8)))
+        width = max(ui.px(72), min(ui.px(150), (ui.area.w - fit(ui.area, WIDTH, HEIGHT).w) // 2 - ui.px(8)))
         left = pygame.Rect(area.x, area.y, width, area.h)
         right = pygame.Rect(area.right - width, area.y, width, area.h)
         leave, _, stop = rows(left, ui.px(60), 1, ui.px(120))
