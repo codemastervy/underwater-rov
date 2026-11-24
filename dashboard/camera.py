@@ -18,6 +18,7 @@ from .link import write_file
 
 WIDTH, HEIGHT = 640, 480
 RETRY = 3.0               # seconds before trying a camera that failed again
+STUCK = 4.0               # seconds without a new picture: the capture card hangs, start again
 COMMAND_EVERY = 0.1       # ffmpeg reads one command in this time
 PIPE_SIZE, F_SETPIPE_SZ = 1 << 20, 1031       # a whole frame fits, so reading it takes one or two calls
 PR_SET_PDEATHSIG = 1
@@ -94,6 +95,7 @@ class Camera:
         self.error = ""
         self.view = None              # size the page shows the picture in
         self._process = None
+        self._started = 0.0
         self._applied = {}
         self._retry_at = self._command_at = 0.0
 
@@ -152,6 +154,9 @@ class Camera:
             if now >= self._retry_at:
                 self._retry_at = now + RETRY
                 self._start()
+        elif now - max(self._started, self.frame.time if self.frame else 0.0) > STUCK:
+            self.stop()                   # never leave an old picture on the screen as if it were live
+            self.error, self._retry_at = "No picture from the camera, trying again…", now + 1.0
         elif now >= self._command_at:
             self._send_change(now)
 
@@ -162,6 +167,7 @@ class Camera:
             self.error = "No camera / capture card found"
             return
         self.error = ""
+        self._started = time.monotonic()
         self._applied = self._filters()
         command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-nostats", "-stats_period", "0.05",
                    "-fflags", "nobuffer", "-flags", "low_delay", *source,

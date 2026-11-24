@@ -1,4 +1,4 @@
-# Underwater ROV config. Edit this, then:  sudo systemctl restart rov
+# Underwater ROV config. Edit this, then close and open the ROV app.
 # Pin numbers are BCM GPIO numbers (NOT physical pin numbers). See README.md for the wiring table.
 
 [gpio]
@@ -17,8 +17,10 @@ drive_profile = "Standard"   # profile in use: a controller profile (controller 
 deadzone = 0.08          # ignore stick movement smaller than this (0..1)
 expo = 0.35              # 0 = linear, 1 = very soft around center (finer control at low speed)
 ramp_per_second = 3.0    # max change in motor power per second (3.0 = 0 to full in 0.33 s). Protects battery/drivers
+keyboard_ramp_per_second = 0   # keyboard profiles: 0 = a key is full power at once; 3.0 = smooth like the sticks
 speed_levels = [0.25, 0.5, 0.75, 1.0]
 start_speed_level = 1    # index into speed_levels (1 = 50%)
+keyboard_speed_level = 3       # the same for keyboard profiles (3 = 100%)
 min_duty = 0             # % - set e.g. 15 if motors hum but don't spin at very low power
 heartbeat_timeout = 0.5  # seconds. PS4/PS5 pads stream motion data constantly; if it stops, motors stop.
                          # (Bluetooth can take up to 20 s to report a dead link, this catches it in 0.5 s)

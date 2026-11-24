@@ -2,7 +2,7 @@
 
 The dashboard checks GitHub at start-up and every 30 minutes. When a newer version is there it
 shows "UPDATE READY"; UPDATE NOW on the SYSTEM page (only while SAFE) installs it and
-restarts the program. Your settings are never touched (motor flips, profiles, camera, autopilot,
+opens the app again. Your settings are never touched (motor flips, profiles, camera, autopilot,
 mission, arm tune).
 
 VERSION (next to this file) holds the GitHub commit the installed copy came from.
@@ -101,6 +101,10 @@ class Updater:
     def check(self):
         if self.busy:
             return
+        if os.path.exists(os.path.join(HERE, ".git")):      # never overwrite somebody's work
+            self.next_check = float("inf")
+            self.state, self.text = "current", "This is a git folder: update it with git pull"
+            return
         self.busy = True
         self.next_check = time.monotonic() + CHECK_EVERY
         if self.state != "ready":
@@ -150,7 +154,7 @@ class Updater:
 
 
 def install_files(src, dest):
-    """Raspberry Pi: run the new install.sh (packages, service, autostart). If sudo needs a password,
+    """Raspberry Pi: run the new install.sh (packages, autostart). If sudo needs a password,
     just copy the program files (/opt/rov belongs to the pi user). Returns notes for the user."""
     user = os.environ.get("USER") or "pi"
     try:
@@ -163,14 +167,3 @@ def install_files(src, dest):
         copy_program(src, dest)
         return ["copied the program only (sudo asked for a password, packages not checked)"]
     return []
-
-
-def restart_after_update(argv):
-    """Start the new version: restart the 'rov' service (motors stop for ~2 s; it's SAFE anyway),
-    then replace this dashboard with the new one. Doesn't return if it worked."""
-    try:
-        subprocess.run(["sudo", "-n", "systemctl", "restart", "rov"], capture_output=True, timeout=30)
-    except (OSError, subprocess.SubprocessError):
-        pass
-    import sys
-    os.execv(sys.executable, [sys.executable, os.path.join(HERE, "rov_gui.py")] + list(argv[1:]))

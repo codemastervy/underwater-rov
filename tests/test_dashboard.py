@@ -1,5 +1,6 @@
 """Tests for the dashboard (no screen, controller or camera needed): it runs against the real motor program with
 a fake GPIO. Everything must work with the mouse alone and with the keyboard alone, at any resolution."""
+import json
 import os
 import shutil
 import sys
@@ -19,7 +20,7 @@ try:
 except ImportError:
     raise unittest.SkipTest("pygame is not installed")
 from dashboard import app as dashboard  # noqa: E402
-from dashboard import camera  # noqa: E402
+from dashboard import camera, program  # noqa: E402
 
 SIZES = [(800, 480), (736, 436), (1024, 614), (1366, 768), (1920, 1080), (3840, 2160), (3440, 1440), (1024, 768),
          (480, 800), (900, 1000), (640, 400)]
@@ -173,7 +174,7 @@ class LayoutTests(DashboardTest):
         self.step()
         self.assertEqual(self.app.edge, 5)              # the case monitor
         self.focus("edge")
-        self.press(pygame.K_RIGHT)
+        self.press(pygame.K_EQUALS)
         self.assertEqual(self.app.edge, 6)
         self.assertEqual(self.app.ui.area, pygame.Rect(48, 29, 704, 422))
         self.assertEqual(dashboard.screen.load_edge(), 6)
@@ -222,19 +223,114 @@ class KeyboardOnlyTests(DashboardTest):
             ui.move = None
             self.assertEqual(reached, everything, f"{name}: arrows")
 
+    def settings(self):
+        """Everything the screen can change."""
+        app, r = self.app, self.rov
+        return json.dumps([r.ap.s, r.ap.enabled, r.profiles, r.profile_idx, r.designs, r.design_id, r.level, r.sound_on,
+                           r.sound_volume, app.pages["profiles"].index, app.pages["mission"].steps, app.saved_edge,
+                           app.camera.picture, app.camera.flip, getattr(app.camera, "picked", None),
+                           [t.invert for t in r.thrusters]])
+
+    def open_for_arrows(self, name):
+        self.rov.use_profile("Standard")
+        self.app.show(name)
+        if name == "camera":
+            self.app.page.picture_open = True
+        self.app.ui.ring = True
+        self.step()
+
+    def test_arrows_change_nothing_and_the_opposite_arrow_leads_back(self):
+        back = {"up": "down", "down": "up", "left": "right", "right": "left"}
+        for name in self.app.pages:
+            self.open_for_arrows(name)
+            before = self.settings()
+            for wid in self.ids():
+                for move in ARROWS:
+                    self.app.ui.focus = wid
+                    self.press(ARROWS[move])
+                    if self.app.ui.focus != wid:
+                        self.press(ARROWS[back[move]])
+                        self.assertEqual(self.app.ui.focus, wid, f"{name}: {wid} {move} and back")
+            self.step(6)
+            self.assertEqual(self.settings(), before, name)
+
+    def test_a_long_way_there_and_back(self):
+        self.open_for_arrows("profiles")
+        way = ["down", "right", "right", "right", "down", "down", "left", "down", "right", "up"]
+        places = []
+        for move in way:
+            places.append(self.app.ui.focus)
+            self.press(ARROWS[move])
+        for move, place in zip(reversed(way), reversed(places)):
+            if self.app.ui.focus != place:
+                self.press(ARROWS[{"up": "down", "down": "up", "left": "right", "right": "left"}[move]])
+            self.assertEqual(self.app.ui.focus, place)
+
+    def test_plus_and_minus_only_change_the_value_in_the_ring(self):
+        for name in self.app.pages:
+            self.open_for_arrows(name)
+            for wid in self.ids():
+                self.app.ui.focus = wid
+                self.step(1)
+                for key in (pygame.K_EQUALS, pygame.K_MINUS):
+                    self.press(key)
+                    self.assertEqual(self.app.ui.focus, wid, f"{name}: {wid}")
+
+    def test_plus_and_minus_choose_in_a_list(self):
+        self.press(pygame.K_F4)
+        self.focus("list")
+        here = self.app.page.index
+        self.press(pygame.K_MINUS)
+        self.assertEqual(self.app.page.index, here - 1)
+        self.press(pygame.K_EQUALS)
+        self.assertEqual(self.app.page.index, here)
+
+    def test_plus_on_the_camera_page_changes_the_picture_not_the_speed(self):
+        for profile in ("Standard", "Keys arrows"):           # that one uses + and - for the speed
+            self.app.show("drive")
+            self.rov.use_profile(profile)
+            self.open_for_arrows("camera")
+            self.rov.use_profile(profile)
+            self.step(4)
+            speed, red = self.rov.level, self.app.camera.picture["red"]
+            self.focus(("picture", "red"))
+            self.press(pygame.K_MINUS)
+            self.step(4)
+            self.assertAlmostEqual(self.app.camera.picture["red"], red - 0.05)
+            self.assertEqual(self.rov.level, speed)
+            self.assertTrue(self.app.ui.ring)
+            self.press(pygame.K_BACKSPACE)                    # the panel
+            self.press(pygame.K_BACKSPACE)                    # the ring: + and - are the speed again
+            self.assertFalse(self.app.ui.ring)
+            self.press(pygame.K_MINUS)
+            self.step(4)
+            self.assertEqual(self.rov.level, speed - 1)
+
+    def test_shift_tab_goes_back_and_never_drives(self):
+        self.rov.use_profile("Keys WASD")                     # Shift = down
+        self.step()
+        self.press(pygame.K_TAB)
+        first = self.app.ui.focus
+        self.press(pygame.K_TAB)
+        self.press(pygame.K_LSHIFT, release=False)
+        self.press(pygame.K_TAB, mod=pygame.KMOD_SHIFT)
+        self.release(pygame.K_LSHIFT)
+        self.assertEqual(self.app.ui.focus, first)
+        self.assertFalse(self.app.keyboard.held)
+
     def test_function_keys_open_the_pages(self):
         for i, name in enumerate(dashboard.TABS):
             self.press(getattr(pygame, f"K_F{i + 1}"))
             self.assertEqual(self.app.page.name, name)
 
-    def test_enter_left_and_right_use_widgets(self):
+    def test_enter_plus_and_minus_use_widgets(self):
         self.press(pygame.K_F3)
         self.focus("master")
         self.press(pygame.K_RETURN)
         self.assertTrue(self.rov.ap.enabled)
         self.focus(("ap", "power"))
-        for _ in range(3):
-            self.press(pygame.K_RIGHT)
+        for key in (pygame.K_EQUALS, pygame.K_KP_PLUS, pygame.K_PLUS, pygame.K_EQUALS, pygame.K_MINUS):
+            self.press(key)
         self.step(6)
         self.assertEqual(self.rov.ap.s["power"], 0.65)
         self.focus(("ap", "line_colour"))
@@ -376,7 +472,7 @@ class MouseOnlyTests(DashboardTest):
             self.app.show(name)
             self.step()
             for wid in self.ids():
-                if wid in self.ids() and wid not in ("CLOSE DASHBOARD", "fullscreen"):
+                if wid in self.ids() and wid not in ("CLOSE THE APP", "fullscreen"):
                     self.click(wid)
                     self.assertFalse(self.rov.armed, f"{name}: {wid}")
                 while self.app.dialogs:
@@ -431,8 +527,8 @@ class DriveTests(DashboardTest):
         self.keyboard_profile()
         self.arm()
         self.press(pygame.K_w, release=False)
-        self.step(20)
-        self.assertGreater(self.rov.last_pilot["surge"], 0.9)
+        self.step(1)
+        self.assertEqual([t.value for t in self.rov.thrusters if t.name in ("left", "right")], [1.0, 1.0])
         self.release(pygame.K_w)
         self.step(20)
         self.assertEqual(self.rov.last_pilot["surge"], 0)
@@ -540,6 +636,124 @@ class DriveTests(DashboardTest):
             self.app.show(name)
             self.app.frame()
         self.assertFalse(self.app.status.online)
+
+
+class ProgramTests(DashboardTest):
+    """The app runs the motor program itself."""
+    def program(self, code, **options):
+        runner = program.MotorProgram(dry_run=True, **options)
+        with open(os.path.join(self.dir, "stand-in.py"), "w") as f:
+            f.write(code)
+        runner.command = [sys.executable, os.path.join(self.dir, "stand-in.py")]
+        self.addCleanup(runner.stop)
+        return runner
+
+    def wait(self, ready):
+        end = time.monotonic() + 8
+        while not ready() and time.monotonic() < end:
+            time.sleep(0.02)
+        self.assertTrue(ready())
+
+    def test_it_is_started_again_and_the_reason_is_shown(self):
+        runner = self.program("print('first line')\nraise SystemExit('GPIO busy')")
+        with mock.patch.object(program, "AGAIN", 0.05):
+            runner.start()
+            self.wait(lambda: runner.stops >= 2)
+        self.assertEqual(runner.problem, "Motor program stopped: GPIO busy")
+        self.app.program = runner
+        os.remove(rov.STATUS_PATH)
+        self.app.link.status = dashboard.RovLink().status
+        self.assertEqual(self.app.message()[0], runner.problem)
+
+    def test_it_is_stopped_with_the_app_and_gets_time_for_the_motors(self):
+        done, up = os.path.join(self.dir, "done"), os.path.join(self.dir, "up")
+        runner = self.program(f"""import signal, sys, time
+def stop(*_):
+    time.sleep(0.3); open({done!r}, "w").close(); sys.exit()
+signal.signal(signal.SIGTERM, stop)
+open({up!r}, "w").close()
+time.sleep(60)""")
+        self.app.program = runner
+        runner.start()
+        self.wait(lambda: os.path.exists(up))
+        with mock.patch.object(pygame, "quit"):
+            self.app.close()
+        self.assertTrue(os.path.exists(done))
+        runner.join(2)
+        self.assertFalse(runner.is_alive())
+
+    def test_it_is_not_started_when_blocked(self):
+        runner = self.program("", blocked="an older app runs")
+        runner.start()
+        runner.join(2)
+        self.assertEqual((runner.stops, runner.problem), (0, "an older app runs"))
+
+    def test_the_real_program_runs_and_ends_with_the_app(self):
+        with mock.patch.dict(os.environ, ROV_RUN_DIR=self.dir):
+            shutil.copy(os.path.join(ROOT, "rov.py"), self.dir)
+            runner = program.MotorProgram(dry_run=True)
+            self.addCleanup(runner.stop)
+            runner.start()
+            status = os.path.join(self.dir, "status.json")
+            self.wait(lambda: os.path.exists(status))
+            with open(status) as f:
+                self.assertFalse(json.load(f)["armed"])
+            process = runner._process
+            runner.stop()
+            self.assertEqual(process.returncode, 0)
+
+    def test_an_update_never_restarts_the_app_while_armed(self):
+        self.app.updater = mock.Mock(state="done", notes=[], ready=False)
+        self.app.link.status.armed = True
+        self.app._check_updater(0)
+        self.app._check_updater(100)
+        self.assertFalse(self.app.restart)
+        self.app.link.status.armed = False
+        self.app._check_updater(100)
+        self.app._check_updater(200)
+        self.assertTrue(self.app.restart)
+        self.assertFalse(self.app.running)
+
+    def test_a_git_folder_is_never_updated_over(self):
+        import updater
+        with mock.patch.object(updater, "HERE", self.dir):
+            os.mkdir(os.path.join(self.dir, ".git"))
+            u = updater.Updater()
+            u.tick()
+            self.assertEqual((u.state, u.busy, u.ready), ("current", False, False))
+
+
+class PairingTests(unittest.TestCase):
+    def test_only_controllers_are_paired(self):
+        from dashboard import pairing
+        listing = "Device AA:BB Wireless Controller\nDevice CC:DD Some Headphones\n[CHG] Device EE:FF x\n" \
+                  "Device 11:22 DualSense Wireless Controller\n"
+        calls = []
+
+        def answer(*command, timeout=0):
+            calls.append(command)
+            return {("devices",): listing, ("info", "11:22"): "\tPaired: yes"}.get(command, "")
+        with mock.patch.object(pairing, "bluetooth", answer), mock.patch("builtins.print"):
+            self.assertFalse(pairing.AutoPair.round())
+        self.assertEqual([c[1] for c in calls if c[0] == "pair"], ["AA:BB"])
+        self.assertEqual([c[1] for c in calls if c[0] == "connect"], ["AA:BB", "11:22"])
+
+    def test_a_connected_controller_is_left_alone(self):
+        from dashboard import pairing
+        with mock.patch.object(pairing, "bluetooth", lambda *c, timeout=0: "Device AA:BB DualSense\n"):
+            self.assertTrue(pairing.AutoPair.round())
+
+
+class FrozenCameraTests(DashboardTest):
+    def test_a_frozen_picture_is_not_shown_as_live(self):
+        cam = self.app.camera
+        cam._process = mock.Mock(poll=lambda: None)
+        now = time.monotonic()
+        cam.frame = camera.Frame(1, now - 10, b"", None)
+        cam._started = now - 60
+        cam.update(now, True)
+        self.assertIsNone(cam.frame)
+        self.assertIn("No picture", cam.error)
 
 
 class StartTests(unittest.TestCase):

@@ -8,9 +8,9 @@ On the Pi (fresh Raspberry Pi OS or an existing ROV Pi), connected to the intern
 ```bash
 curl -fsSL https://raw.githubusercontent.com/codemastervy/underwater-rov/main/setup.sh | bash
 ```
-- **New Pi:** installs everything (Python libraries, Bluetooth, ffmpeg), the `rov` service, the dashboard autostart and
+- **New Pi:** installs everything (Python libraries, Bluetooth, ffmpeg), the ROV app (opens when the desktop starts) and
   the 800x480 screen setting. Then `sudo reboot`. To leave the screen setting alone, use `... | ROV_SCREEN=none bash`.
-- **Already installed:** downloads the latest version and restarts the program and dashboard. Your motor flips,
+- **Already installed:** downloads the latest version and restarts the app (the old systemd services are removed). Your motor flips,
   drive profiles and camera settings are kept.
 - Nothing needs installing first, not even git.
 - **After that you never need the command again:** the dashboard checks GitHub for a new version when it starts and every
@@ -36,8 +36,8 @@ The dashboard, with simulated ROV data; the camera picture is a test pattern:
 ## Files
 | File | What it is |
 |---|---|
-| `rov.py` | the motor program (controller → motors), runs as the `rov` service |
-| `rov_gui.py` | starts the dashboard (pygame, full screen, any resolution); its code is in `dashboard/` |
+| `rov_gui.py` | **the app**: opens the screen (code in `dashboard/`), runs the motor program and pairs controllers. No services |
+| `rov.py` | the motor program (controller → motors); the app starts and stops it |
 | `config.toml` | pins, motor layout, speeds, safety settings |
 | `profiles.json` | drive profiles (edited on the PROFILES page) |
 | `designs.json` | your changes to the frame-design trims (made on the MOTORS page; not in the repo) |
@@ -45,8 +45,8 @@ The dashboard, with simulated ROV data; the camera picture is a test pattern:
 | `camera.json` | camera flip setting |
 | `setup.sh` | one-command install / update from GitHub (see above) |
 | `updater.py` | automatic updates from GitHub (used by the dashboard) |
-| `install.sh` | installs everything on the Pi and starts it on boot |
-| `pair-controller.sh` · `rov-autopair.sh` | pair a PS5/PS4/other Bluetooth controller · auto-pairing service |
+| `install.sh` | installs everything on the Pi; the app then opens with the desktop |
+| `pair-controller.sh` | pair a Bluetooth controller by hand (the app does it by itself) |
 
 The ready-to-flash Pi OS image (login `pi` / `raspberry`, hostname `rov`, SSH on, Ethernet only) is too big for
 GitHub and isn't in this repo.
@@ -91,14 +91,14 @@ Pi GND pins: 6, 9, 14, 20, 25, 30, 34, 39.
    ```
 4. **Identify the motors** (props in the water or clear of everything):
    ```bash
-   sudo systemctl stop rov
+   # close the ROV app first (SYSTEM > CLOSE THE APP)
    python3 /opt/rov/rov.py --test
    ```
    Each motor spins forward then reverse at 30 %. Then edit `/opt/rov/config.toml`:
    wrong direction → `invert = true`; wrong motor → swap the `rpwm`/`lpwm` pins between entries.
-5. `sudo systemctl start rov`. From now on it starts by itself on every boot.
+5. Open **ROV** from the menu. It opens by itself whenever the desktop starts (the Pi must log in to the desktop by itself).
 
-To watch it live on the case's monitor: `sudo systemctl stop rov && python3 /opt/rov/rov.py`.
+**It is one app.** Closing it stops the motors. If the motor program or the screen ever crashes, the app starts it again (SAFE).
 
 ## Controls
 
@@ -113,7 +113,7 @@ To watch it live on the case's monitor: `sudo systemctl stop rov && python3 /opt
 | R1 / L1 | speed level up / down (25 / 50 / 75 / 100 %) |
 | Sticks, triggers, D-pad | depend on the drive profile (below) |
 
-It starts at 50 % speed. The motors ramp up smoothly rather than jumping to full power.
+The controller starts at 50 % speed, and the motors ramp up smoothly rather than jumping to full power.
 
 ### Drive profiles
 | | **Standard** | **Tank** |
@@ -145,6 +145,9 @@ profile** (KEYS). Only the device that drives can arm. STOP works from everythin
 | Space / Shift | up / down |
 | R / F | tilt nose up / down |
 | E / Q | speed up / down |
+
+**A key is full power at once**: no ramp, and keyboard profiles start at 100 % speed (E/Q lower it;
+`keyboard_speed_level` and `keyboard_ramp_per_second` in `config.toml`).
 
 Enter, Esc, Tab and F1-F12 can't be bound. The dashboard reports the held keys 20 times a second. If that stops for 0.5 s
 (dashboard closed or frozen, or another window has the keyboard) **the motors disarm**.
@@ -204,7 +207,7 @@ alone, and with the keyboard alone.** (Arming is not on the mouse on purpose: OP
 | **Esc** | STOP, always. If it was already SAFE it also goes back |
 | F1-F6 | DRIVE, CAMERA, AUTOPILOT, PROFILES, MOTORS, SYSTEM (F2 again: full-screen video) |
 | arrows, Tab / Enter / Backspace | move the focus ring / use / back |
-| ← → on a value | change it |
+| + − on a value or list | change it (arrows only ever move) |
 | P, + −, C, 1-5, 0 | on DRIVE and CAMERA: keyboard profile, speed, camera, autopilot mode, mode off |
 | Space | on DRIVE and CAMERA: STOP, unless the keyboard profile uses it |
 | F10, F11, F12 | list of keys, full screen / window, frame rate |
@@ -224,7 +227,7 @@ drive until **Backspace** (or a drive key that isn't an arrow). On the other pag
 Options: `--windowed`, `--size 1024x614`, `--fps 60` (limit; keeps a Pi in a closed case cooler), `--show-fps`,
 `--page camera`, `--margins 30,20,30,20` (pixels hidden by the monitor, instead of **Edge margin**).
 
-Try it on a computer without the ROV: `python3 rov.py --dry-run` in one terminal, `python3 rov_gui.py` in another.
+Try it on a computer without the ROV: `python3 rov_gui.py --dry-run --windowed`.
 
 ### Frame designs
 Each frame balances differently, so **MOTORS › FRAME** applies its own trim on top of the `[[motor]]` numbers
@@ -271,6 +274,6 @@ If the main one drops, it switches to whichever other controller is connected (s
 ## Troubleshooting
 - `python3 /opt/rov/rov.py --list` shows every input device the Pi sees.
 - `python3 /opt/rov/rov.py --dry-run` tests the controller without touching the GPIO pins.
-- `journalctl -u rov -f` shows the service log.
+- `/opt/rov/rov.log` says what happened.
 - Motor hums but doesn't turn at low stick: set `min_duty = 15` in config.
 

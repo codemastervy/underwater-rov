@@ -1,6 +1,8 @@
 """SYSTEM: arm sound, updates, the screen, and power."""
 import subprocess
 
+import rov as core
+
 from ..dialogs import ConfirmDialog, HelpDialog, TextDialog
 from ..layout import columns, rows
 from ..screen import EDGES
@@ -101,9 +103,8 @@ class SystemPage(Page):
                           lambda: self._power("off"))
         if ui.button(restart, "RESTART", icon="restart", size=BODY, enabled=unlocked):
             self._confirm("Restart the Pi?", "Takes about a minute.", "RESTART", lambda: self._power("reboot"))
-        if ui.button(close, "CLOSE DASHBOARD", size=BODY):
-            self._confirm("Close the dashboard?", "The motor program keeps running. A keyboard profile disarms.",
-                          "CLOSE", self.app.quit)
+        if ui.button(close, "CLOSE THE APP", size=BODY):
+            self._confirm("Close the app?", "The motors stop. Open ROV from the menu to start it again.", "CLOSE", self.app.quit)
 
     def _confirm(self, title, text, action, do):
         self.app.open_dialog(ConfirmDialog(self.app, title, text, action, do))
@@ -116,5 +117,5 @@ class SystemPage(Page):
         if self.status.online:
             self.link.send(f"power:{what}")       # rov.py switches the motors off first
         else:
-            subprocess.Popen(["sudo", "-n", "systemctl", "poweroff" if what == "off" else "reboot"],
+            subprocess.Popen(core.power_commands(what)[0], stdin=subprocess.DEVNULL,
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -5,9 +5,9 @@
 #   curl -fsSL https://raw.githubusercontent.com/codemastervy/underwater-rov/main/setup.sh | bash
 #
 # - Downloads the latest version from GitHub into ~/underwater-rov (no git needed).
-# - Installs everything it needs (Python libraries, Bluetooth, ffmpeg) and the 'rov' service + dashboard.
+# - Installs everything it needs (Python libraries, Bluetooth, ffmpeg) and the ROV app (no services).
 # - Updating keeps your settings: motor flips (config.toml), drive profiles, camera, autopilot, arm tune.
-# - After this, the dashboard updates itself: UPDATE NOW on the SYSTEM page when it says UPDATE READY.
+# - After this, the app updates itself: UPDATE NOW on the SYSTEM page when it says UPDATE READY.
 # - New Pi only: sets the screen to 800x480 for the case monitor (skip with ROV_SCREEN=none).
 set -euo pipefail
 
@@ -36,6 +36,11 @@ mkdir -p "$DIR"
 cp -a "$SRC/." "$DIR/"
 chmod +x "$DIR"/*.sh
 
+# close the app (the motors stop) before its files are replaced
+APP="^[^ ]*python[0-9.]* ([^ ]*/)?rov(_gui)?\.py( |$)"
+pkill -TERM -f "$APP" 2>/dev/null || true
+for _ in $(seq 20); do pgrep -f "$APP" >/dev/null || break; sleep 0.3; done
+
 echo "==> Installing (asks for your password)"
 sudo ROV_USER="$USER" bash "$DIR/install.sh"
 
@@ -62,20 +67,15 @@ EOF
   done
 fi
 
-echo "==> Starting the new version"
-sudo systemctl restart rov rov-autopair
-# restart the dashboard if it's open on the screen
-for p in $(pgrep -f "python3 /opt/rov/rov_gui.py" || true); do kill "$p" 2>/dev/null || true; done
 if [ "$MODE" = update ]; then
+  echo "==> Starting the new version"
   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
   export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}" DISPLAY="${DISPLAY:-:0}"
-  if [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ] || [ -n "${DISPLAY:-}" ]; then
-    (cd /opt/rov && setsid python3 /opt/rov/rov_gui.py >/dev/null 2>&1 < /dev/null &) || true
-  fi
+  (cd /opt/rov && setsid python3 /opt/rov/rov_gui.py >/dev/null 2>&1 < /dev/null &) || true
   echo
-  echo "Updated to the latest version. The ROV program and dashboard have restarted."
+  echo "Updated to the latest version. The ROV app has restarted."
 else
   echo
-  echo "Installed. Reboot to finish (screen size, permissions, dashboard autostart):  sudo reboot"
+  echo "Installed. Reboot to finish (screen size, permissions, autostart):  sudo reboot"
   echo "Then pair the controller: PS5 hold CREATE+PS (PS4: SHARE+PS) - it pairs by itself."
 fi

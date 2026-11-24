@@ -46,6 +46,6 @@ Not connected yet. Try it by hand:
     trust $MAC
     connect $MAC
 If a PS4 clone controller won't stay connected, set  ClassicBondedOnly=false  in
-/etc/bluetooth/input.conf and run:  sudo systemctl restart bluetooth
+/etc/bluetooth/input.conf and restart the Pi
 EOF
 fi
